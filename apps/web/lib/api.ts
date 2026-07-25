@@ -92,8 +92,22 @@ export function listCases(tenantId = "tg", status?: string) {
   return request<CaseSummary[]>(`/cases?${q.toString()}`);
 }
 
+/** Queue for instructors — uses status filter (works without a dedicated inbox route). */
 export function listInbox(tenantId = "tg") {
-  return request<CaseSummary[]>(`/cases/inbox/${encodeURIComponent(tenantId)}`);
+  return listCases(tenantId, "in_review");
+}
+
+/** Client-side fallback when API does not yet return allowedTransitions */
+export function allowedTransitionsFor(status: string): string[] {
+  const map: Record<string, string[]> = {
+    awaiting_payment: ["cancelled"],
+    in_review: ["incomplete", "ready", "rejected"],
+    incomplete: ["in_review", "rejected", "cancelled"],
+    ready: ["delivered", "closed"],
+    delivered: ["closed"],
+    rejected: ["closed", "in_review"],
+  };
+  return map[status] ?? [];
 }
 
 export function instructCase(

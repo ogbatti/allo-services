@@ -5,6 +5,7 @@ import { FormEvent, useCallback, useEffect, useState } from "react";
 import {
   CaseDetails,
   CaseSummary,
+  allowedTransitionsFor,
   getCase,
   instructCase,
   listInbox,
@@ -235,7 +236,10 @@ export default function BackofficePage() {
               />
 
               <div className="row" style={{ marginTop: "0.85rem" }}>
-                {(selected.allowedTransitions ?? []).map((status) => (
+                {(selected.allowedTransitions?.length
+                  ? selected.allowedTransitions
+                  : allowedTransitionsFor(selected.status)
+                ).map((status) => (
                   <button
                     key={status}
                     type="button"
