@@ -1,0 +1,36 @@
+# One-click demo on Render (free web tiers; DB via Neon URL you paste)
+# https://render.com/deploy?repo=https://github.com/ogbatti/allo-services
+#
+# After first deploy, set on the web service:
+#   NEXT_PUBLIC_API_BASE_URL=https://<api-service>.onrender.com/api/v1
+# and redeploy the web service so Next.js bakes the public API URL.
+
+services:
+  - type: web
+    name: allo-services-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./apps/api/Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3001"
+      - key: DATABASE_URL
+        sync: false
+
+  - type: web
+    name: allo-services-web
+    runtime: docker
+    plan: free
+    region: frankfurt
+    dockerfilePath: ./apps/web/Dockerfile
+    dockerContext: .
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_PUBLIC_API_BASE_URL
+        sync: false

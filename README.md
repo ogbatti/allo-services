@@ -57,7 +57,18 @@ docs/             Architecture FR/EN
 |-----------|-----------------|
 | PostgreSQL | [Neon](https://neon.tech) free |
 | API | [Fly.io](https://fly.io) free allowance |
-| Web | [Cloudflare Pages](https://pages.cloudflare.com) / Vercel free |
+| Web | [Vercel](https://vercel.com) Hobby free |
+
+**Déploiement guidé (recommandé)** — dans un terminal PowerShell interactif :
+
+```powershell
+pwsh -File scripts/deploy-demo.ps1
+```
+
+Ou blueprint Render : [Deploy to Render](https://render.com/deploy?repo=https://github.com/ogbatti/allo-services)  
+(après création, coller `DATABASE_URL` Neon + `NEXT_PUBLIC_API_BASE_URL`).
+
+Détails : [docs/deploy.fr.md](docs/deploy.fr.md).
 
 Les données citoyens réelles devront respecter la souveraineté nationale (hébergement pays) — le sandbox produit reste séparé.
 
@@ -96,10 +107,19 @@ Result: case + simulated payment + SMS in the demo outbox.
 - **Operator**: deploy and parameterize per state  
 - Portfolio APIs (Voix d’Afrique, MobiMarché 360, WCA Digital Trust): **stubs / future connectors**
 
+### Demo hosting
+
+```powershell
+pwsh -File scripts/deploy-demo.ps1
+```
+
+See [docs/deploy.en.md](docs/deploy.en.md).
+
 ### Docs
 
 - [Architecture FR](docs/architecture.fr.md)
 - [Architecture EN](docs/architecture.en.md)
+- [Deploy FR](docs/deploy.fr.md) / [Deploy EN](docs/deploy.en.md)
 
 ---
 
