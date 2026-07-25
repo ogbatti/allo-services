@@ -1,0 +1,30 @@
+{
+  "name": "allo-services",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Allô Services — Universal citizen service gateway (USSD, voice, SMS, WhatsApp, web, agents)",
+  "license": "Apache-2.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @allo/api",
+    "dev:api": "npm run dev -w @allo/api",
+    "dev:web": "npm run dev -w @allo/web",
+    "build": "npm run build -w @allo/shared && npm run build -w @allo/api && npm run build -w @allo/web",
+    "build:shared": "npm run build -w @allo/shared",
+    "build:api": "npm run build -w @allo/api",
+    "build:web": "npm run build -w @allo/web",
+    "start:api": "npm run start:prod -w @allo/api",
+    "lint": "npm run lint -w @allo/api && npm run lint -w @allo/web",
+    "test": "npm run test -w @allo/api",
+    "db:generate": "npm run db:generate -w @allo/api",
+    "db:migrate": "npm run db:migrate -w @allo/api",
+    "db:push": "npm run db:push -w @allo/api",
+    "demo:seed": "npm run demo:seed -w @allo/api"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

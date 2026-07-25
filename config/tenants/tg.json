@@ -1,0 +1,27 @@
+{
+  "id": "tg",
+  "countryCode": "TG",
+  "name": {
+    "fr": "Togo",
+    "ee": "Togo",
+    "en": "Togo"
+  },
+  "defaultLocale": "fr",
+  "supportedLocales": ["fr", "ee", "en"],
+  "currency": "XOF",
+  "ussdShortCode": "*855#",
+  "voiceShortNumber": "855",
+  "smsSenderId": "ALLO-TG",
+  "modules": [
+    "platform-core",
+    "journey-engine",
+    "case-management",
+    "channels-ussd",
+    "channels-sms",
+    "channels-web",
+    "payments",
+    "notifications",
+    "partner-backoffice",
+    "service-pack-civil-status"
+  ]
+}
