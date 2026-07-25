@@ -5,11 +5,17 @@
 
 .NOTES
   Run in a normal PowerShell terminal (not headless):
-    pwsh -File scripts/deploy-demo.ps1
+    powershell -ExecutionPolicy Bypass -File scripts\deploy-demo.ps1
 #>
 $ErrorActionPreference = "Stop"
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 Set-Location $Root
+
+# Ensure Fly CLI is on PATH for this session
+$flyBin = Join-Path $env:USERPROFILE ".fly\bin"
+if (Test-Path $flyBin) {
+  $env:Path = "$flyBin;$env:Path"
+}
 
 $fly = Join-Path $env:USERPROFILE ".fly\bin\flyctl.exe"
 if (-not (Test-Path $fly)) {
@@ -56,12 +62,20 @@ try {
 
 Write-Host ""
 Write-Host "==> Vercel web"
-Write-Host "When prompted, link the project and set:"
+Write-Host "Linking apps/web and deploying with API URL:"
 Write-Host "  NEXT_PUBLIC_API_BASE_URL=$ApiBase"
-npx --yes vercel login
-npx --yes vercel --prod --cwd apps/web --yes `
-  --env "NEXT_PUBLIC_API_BASE_URL=$ApiBase" `
-  --build-env "NEXT_PUBLIC_API_BASE_URL=$ApiBase"
+$env:NEXT_PUBLIC_API_BASE_URL = $ApiBase
+Push-Location (Join-Path $Root "apps\web")
+try {
+  npx --yes vercel pull --yes --environment=production 2>$null
+  npx --yes vercel env add NEXT_PUBLIC_API_BASE_URL production 2>$null
+  # Non-interactive prod deploy from apps/web (standalone Next.js app)
+  npx --yes vercel --prod --yes `
+    --env "NEXT_PUBLIC_API_BASE_URL=$ApiBase" `
+    --build-env "NEXT_PUBLIC_API_BASE_URL=$ApiBase"
+} finally {
+  Pop-Location
+}
 
 Write-Host ""
 Write-Host "Demo deploy finished."

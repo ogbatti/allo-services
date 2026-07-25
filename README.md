@@ -62,7 +62,7 @@ docs/             Architecture FR/EN
 **Déploiement guidé (recommandé)** — dans un terminal PowerShell interactif :
 
 ```powershell
-pwsh -File scripts/deploy-demo.ps1
+powershell -ExecutionPolicy Bypass -File scripts\deploy-demo.ps1
 ```
 
 Ou blueprint Render : [Deploy to Render](https://render.com/deploy?repo=https://github.com/ogbatti/allo-services)  
@@ -110,7 +110,7 @@ Result: case + simulated payment + SMS in the demo outbox.
 ### Demo hosting
 
 ```powershell
-pwsh -File scripts/deploy-demo.ps1
+powershell -ExecutionPolicy Bypass -File scripts\deploy-demo.ps1
 ```
 
 See [docs/deploy.en.md](docs/deploy.en.md).
