@@ -26,6 +26,8 @@ COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/packages/shared ./packages/shared
 COPY --from=build /app/apps/api ./apps/api
 COPY --from=build /app/config ./config
+# Never ship local .env into the demo image (Fly secrets provide DATABASE_URL)
+RUN rm -f /app/apps/api/.env /app/apps/api/.env.local /app/apps/api/.env.production
 WORKDIR /app/apps/api
 EXPOSE 3001
 CMD ["sh", "-c", "npx prisma db push && node dist/main.js"]

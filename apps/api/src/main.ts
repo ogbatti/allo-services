@@ -16,9 +16,10 @@ async function bootstrap() {
   );
 
   const port = Number(process.env.PORT ?? 3001);
-  await app.listen(port);
+  // Bind all interfaces for container platforms (Fly, Render, Docker)
+  await app.listen(port, "0.0.0.0");
   // eslint-disable-next-line no-console
-  console.log(`Allô Services API listening on http://localhost:${port}/api/v1`);
+  console.log(`Allô Services API listening on http://0.0.0.0:${port}/api/v1`);
 }
 
 void bootstrap();

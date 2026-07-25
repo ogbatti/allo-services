@@ -34,9 +34,13 @@ Write-Host ""
 Write-Host "Create a free Neon project: https://console.neon.tech"
 Write-Host "Copy the connection string (pooled, SSL)."
 $DatabaseUrl = Read-Host "DATABASE_URL"
+$DatabaseUrl = $DatabaseUrl.Trim().Trim("'").Trim('"')
 
 if ([string]::IsNullOrWhiteSpace($DatabaseUrl)) {
   throw "DATABASE_URL is required"
+}
+if ($DatabaseUrl -notmatch '^postgres(ql)?://') {
+  throw "DATABASE_URL must start with postgresql:// or postgres:// (Neon pooled connection string)."
 }
 
 $App = "allo-services-api"
