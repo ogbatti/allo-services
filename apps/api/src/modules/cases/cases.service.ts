@@ -1,10 +1,23 @@
-import { Injectable, NotFoundException } from "@nestjs/common";
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from "@nestjs/common";
 import type { CaseStatus, ChannelCode, LocaleCode } from "@allo/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import { JourneysService } from "../journeys/journeys.service";
 import { NotificationsService } from "../notifications/notifications.service";
 import { TenantsService } from "../tenants/tenants.service";
-import { CreateCaseDto } from "./dto";
+import { CreateCaseDto, InstructCaseDto } from "./dto";
+
+const ALLOWED_TRANSITIONS: Record<string, CaseStatus[]> = {
+  awaiting_payment: ["cancelled"],
+  in_review: ["incomplete", "ready", "rejected"],
+  incomplete: ["in_review", "rejected", "cancelled"],
+  ready: ["delivered", "closed"],
+  delivered: ["closed"],
+  rejected: ["closed", "in_review"],
+};
 
 @Injectable()
 export class CasesService {
@@ -83,16 +96,83 @@ export class CasesService {
       events: item.statusEvents,
       payments: item.payments,
       notifications: item.notifications,
+      allowedTransitions: ALLOWED_TRANSITIONS[item.status] ?? [],
     };
   }
 
-  async list(tenantId?: string) {
+  async list(tenantId?: string, status?: string) {
     const items = await this.prisma.case.findMany({
-      where: tenantId ? { tenantId } : undefined,
+      where: {
+        ...(tenantId ? { tenantId } : {}),
+        ...(status ? { status } : {}),
+      },
       orderBy: { createdAt: "desc" },
-      take: 50,
+      take: 100,
     });
-    return items.map((item) => this.toSummary(item));
+    return items.map((item) => ({
+      ...this.toSummary(item),
+      payload: JSON.parse(item.payloadJson) as Record<string, string>,
+      allowedTransitions: ALLOWED_TRANSITIONS[item.status] ?? [],
+    }));
+  }
+
+  /** Cases waiting for communal / admin instruction */
+  async inbox(tenantId: string) {
+    this.tenants.get(tenantId);
+    return this.list(tenantId, "in_review");
+  }
+
+  async instruct(trackingNumber: string, dto: InstructCaseDto) {
+    const current = await this.prisma.case.findUnique({
+      where: { trackingNumber },
+    });
+    if (!current) {
+      throw new NotFoundException({
+        fr: `Dossier introuvable: ${trackingNumber}`,
+        en: `Case not found: ${trackingNumber}`,
+      });
+    }
+
+    const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
+    if (!allowed.includes(dto.toStatus)) {
+      throw new BadRequestException({
+        fr: `Transition interdite: ${current.status} → ${dto.toStatus}`,
+        en: `Transition not allowed: ${current.status} → ${dto.toStatus}`,
+      });
+    }
+
+    if (dto.toStatus === "rejected" && !dto.note?.trim()) {
+      throw new BadRequestException({
+        fr: "Un motif de rejet est obligatoire.",
+        en: "A rejection reason is required.",
+      });
+    }
+
+    if (dto.toStatus === "incomplete" && !dto.note?.trim()) {
+      throw new BadRequestException({
+        fr: "Précisez la pièce ou l'information manquante.",
+        en: "Specify the missing document or information.",
+      });
+    }
+
+    const updated = await this.transition(
+      current.id,
+      dto.toStatus,
+      dto.actor.trim(),
+      dto.note?.trim(),
+    );
+
+    await this.notifyStatusChange({
+      tenantId: current.tenantId,
+      caseId: current.id,
+      trackingNumber: current.trackingNumber,
+      phoneNumber: current.phoneNumber,
+      locale: current.locale as LocaleCode,
+      toStatus: dto.toStatus,
+      note: dto.note?.trim(),
+    });
+
+    return this.findByTrackingNumber(updated.trackingNumber);
   }
 
   async transition(
@@ -136,6 +216,56 @@ export class CasesService {
       });
     }
     return item;
+  }
+
+  private async notifyStatusChange(params: {
+    tenantId: string;
+    caseId: string;
+    trackingNumber: string;
+    phoneNumber: string;
+    locale: LocaleCode;
+    toStatus: CaseStatus;
+    note?: string;
+  }) {
+    const { locale, trackingNumber, toStatus, note } = params;
+    let body: string | null = null;
+
+    if (toStatus === "ready") {
+      body =
+        locale === "en"
+          ? `Allô Services: document ready for ${trackingNumber}. Collect via agent or download when available.`
+          : locale === "ee"
+            ? `Allô Services: agbalẽ ${trackingNumber} ɖo. Vá xɔe to ame gbɔ.`
+            : `Allô Services: document prêt pour ${trackingNumber}. Retrait agent ou téléchargement selon commune.`;
+    } else if (toStatus === "rejected") {
+      body =
+        locale === "en"
+          ? `Allô Services: request ${trackingNumber} rejected. Reason: ${note}`
+          : locale === "ee"
+            ? `Allô Services: biabia ${trackingNumber} wogbe. Nukata: ${note}`
+            : `Allô Services: dossier ${trackingNumber} rejeté. Motif: ${note}`;
+    } else if (toStatus === "incomplete") {
+      body =
+        locale === "en"
+          ? `Allô Services: ${trackingNumber} incomplete. Missing: ${note}`
+          : locale === "ee"
+            ? `Allô Services: ${trackingNumber} meɖe go o. Susu: ${note}`
+            : `Allô Services: dossier ${trackingNumber} incomplet. Manque: ${note}`;
+    } else if (toStatus === "delivered") {
+      body =
+        locale === "en"
+          ? `Allô Services: document ${trackingNumber} marked as delivered.`
+          : `Allô Services: document ${trackingNumber} remis.`;
+    }
+
+    if (!body) return;
+
+    await this.notifications.sendSms({
+      tenantId: params.tenantId,
+      caseId: params.caseId,
+      recipient: params.phoneNumber,
+      body,
+    });
   }
 
   private generateTrackingNumber(countryCode: string): string {

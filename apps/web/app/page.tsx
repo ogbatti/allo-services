@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { FormEvent, useMemo, useState } from "react";
 import {
   CaseDetails,
@@ -169,6 +170,9 @@ export default function HomePage() {
       <p className="tag">Tenant TG · Apache-2.0 · MVP</p>
       <h1 className="brand">{t.brand}</h1>
       <p className="lede">{t.lede}</p>
+      <p className="meta" style={{ marginTop: "-1rem", marginBottom: "1.25rem" }}>
+        <Link href="/backoffice">Back-office instructeur →</Link>
+      </p>
 
       <div className="langs" role="group" aria-label="Language">
         {(["fr", "ee", "en"] as Locale[]).map((code) => (

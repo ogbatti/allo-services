@@ -31,3 +31,29 @@ export class CreateCaseDto {
   @IsObject()
   answers?: Record<string, string>;
 }
+
+export class InstructCaseDto {
+  @IsIn([
+    "incomplete",
+    "in_review",
+    "ready",
+    "delivered",
+    "rejected",
+    "closed",
+  ])
+  toStatus!:
+    | "incomplete"
+    | "in_review"
+    | "ready"
+    | "delivered"
+    | "rejected"
+    | "closed";
+
+  @IsString()
+  @MinLength(2)
+  actor!: string;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+}

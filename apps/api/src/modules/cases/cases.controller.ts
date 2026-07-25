@@ -1,14 +1,22 @@
-import { Body, Controller, Get, Param, Post, Query } from "@nestjs/common";
+import { Body, Controller, Get, Param, Patch, Post, Query } from "@nestjs/common";
 import { CasesService } from "./cases.service";
-import { CreateCaseDto } from "./dto";
+import { CreateCaseDto, InstructCaseDto } from "./dto";
 
 @Controller("cases")
 export class CasesController {
   constructor(private readonly cases: CasesService) {}
 
   @Get()
-  list(@Query("tenantId") tenantId?: string) {
-    return this.cases.list(tenantId);
+  list(
+    @Query("tenantId") tenantId?: string,
+    @Query("status") status?: string,
+  ) {
+    return this.cases.list(tenantId, status);
+  }
+
+  @Get("inbox/:tenantId")
+  inbox(@Param("tenantId") tenantId: string) {
+    return this.cases.inbox(tenantId);
   }
 
   @Get(":trackingNumber")
@@ -19,5 +27,13 @@ export class CasesController {
   @Post()
   create(@Body() dto: CreateCaseDto) {
     return this.cases.create(dto);
+  }
+
+  @Patch(":trackingNumber/instruct")
+  instruct(
+    @Param("trackingNumber") trackingNumber: string,
+    @Body() dto: InstructCaseDto,
+  ) {
+    return this.cases.instruct(trackingNumber, dto);
   }
 }
