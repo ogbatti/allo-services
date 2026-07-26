@@ -49,9 +49,10 @@ export class InstructCaseDto {
     | "rejected"
     | "closed";
 
+  @IsOptional()
   @IsString()
   @MinLength(2)
-  actor!: string;
+  actor?: string;
 
   @IsOptional()
   @IsString()

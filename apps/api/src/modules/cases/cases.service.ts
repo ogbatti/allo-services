@@ -34,6 +34,14 @@ export class CasesService {
     const locale = (dto.locale ?? tenant.defaultLocale) as LocaleCode;
     const channel = (dto.channel ?? "web") as ChannelCode;
     const trackingNumber = this.generateTrackingNumber(tenant.countryCode);
+    const answers = dto.answers ?? {};
+    const parsedBill = Number(answers.billAmount ?? "");
+    const feeAmount =
+      Number.isFinite(parsedBill) && parsedBill > 0
+        ? Math.round(parsedBill)
+        : journey.feeAmount;
+    const initialStatus: CaseStatus =
+      feeAmount > 0 ? "awaiting_payment" : "in_review";
 
     const created = await this.prisma.case.create({
       data: {
@@ -42,17 +50,17 @@ export class CasesService {
         serviceCode: journey.serviceCode,
         journeyId: journey.id,
         journeyVersion: journey.version,
-        status: "awaiting_payment",
+        status: initialStatus,
         channel,
         phoneNumber: dto.phoneNumber,
         locale,
-        payloadJson: JSON.stringify(dto.answers ?? {}),
-        feeAmount: journey.feeAmount,
+        payloadJson: JSON.stringify(answers),
+        feeAmount,
         feeCurrency: journey.feeCurrency,
         statusEvents: {
           create: {
             fromStatus: null,
-            toStatus: "awaiting_payment",
+            toStatus: initialStatus,
             actor: "system",
             note: "Case created / Dossier créé",
           },
@@ -66,10 +74,10 @@ export class CasesService {
       recipient: dto.phoneNumber,
       body:
         locale === "en"
-          ? `Allô Services: request registered. Tracking: ${trackingNumber}. Fee: ${journey.feeAmount} ${journey.feeCurrency}.`
+          ? `Allô Services: request registered. Tracking: ${trackingNumber}.${feeAmount > 0 ? ` Fee: ${feeAmount} ${journey.feeCurrency}.` : ""}`
           : locale === "ee"
-            ? `Allô Services: biabia wɔe. Dzodzro: ${trackingNumber}. Ga: ${journey.feeAmount} ${journey.feeCurrency}.`
-            : `Allô Services: demande enregistrée. Suivi: ${trackingNumber}. Frais: ${journey.feeAmount} ${journey.feeCurrency}.`,
+            ? `Allô Services: biabia wɔe. Dzodzro: ${trackingNumber}.${feeAmount > 0 ? ` Ga: ${feeAmount} ${journey.feeCurrency}.` : ""}`
+            : `Allô Services: demande enregistrée. Suivi: ${trackingNumber}.${feeAmount > 0 ? ` Frais: ${feeAmount} ${journey.feeCurrency}.` : ""}`,
     });
 
     return this.toSummary(created);
@@ -100,11 +108,12 @@ export class CasesService {
     };
   }
 
-  async list(tenantId?: string, status?: string) {
+  async list(tenantId?: string, status?: string, serviceCode?: string) {
     const items = await this.prisma.case.findMany({
       where: {
         ...(tenantId ? { tenantId } : {}),
         ...(status ? { status } : {}),
+        ...(serviceCode ? { serviceCode } : {}),
       },
       orderBy: { createdAt: "desc" },
       take: 100,
@@ -158,7 +167,7 @@ export class CasesService {
     const updated = await this.transition(
       current.id,
       dto.toStatus,
-      dto.actor.trim(),
+      (dto.actor ?? "instructeur").trim(),
       dto.note?.trim(),
     );
 

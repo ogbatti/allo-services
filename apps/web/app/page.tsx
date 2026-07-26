@@ -15,7 +15,7 @@ type Locale = "fr" | "ee" | "en";
 const copy = {
   fr: {
     brand: "Allô Services",
-    lede: "Démo bout-en-bout — demande d'acte de naissance (Togo), paiement simulé et SMS.",
+    lede: "Démo multi-services (Togo) — acte de naissance, rendez-vous, factures · paiement et SMS simulés.",
     ussdTitle: "Simulateur USSD (*855#)",
     trackTitle: "Suivi de dossier",
     smsTitle: "Boîte SMS (simulateur)",
@@ -27,6 +27,7 @@ const copy = {
     phone: "Numéro",
     input: "Saisie USSD",
     tracking: "N° de suivi",
+    hint: "Menu: 1 acte · 2 RDV · 3 facture",
   },
   ee: {
     brand: "Allô Services",
@@ -42,10 +43,11 @@ const copy = {
     phone: "Ka ƒe xexlẽdzesi",
     input: "USSD ŋɔŋlɔ",
     tracking: "Dzodzro xexlẽdzesi",
+    hint: "Menu: 1 agbalẽ · 2 RDV · 3 akɔnta",
   },
   en: {
     brand: "Allô Services",
-    lede: "End-to-end demo — birth certificate request (Togo), simulated payment and SMS.",
+    lede: "Multi-service demo (Togo) — birth certificate, appointments, bills · simulated payment and SMS.",
     ussdTitle: "USSD simulator (*855#)",
     trackTitle: "Case tracking",
     smsTitle: "SMS outbox (simulator)",
@@ -57,6 +59,7 @@ const copy = {
     phone: "Phone number",
     input: "USSD input",
     tracking: "Tracking number",
+    hint: "Menu: 1 birth cert · 2 appointment · 3 bill",
   },
 } as const;
 
@@ -236,7 +239,7 @@ export default function HomePage() {
             </button>
           </form>
           <p className="meta">
-            Session: {sessionId ?? "—"} · Hint: 1 → name → date → commune → 1
+            Session: {sessionId ?? "—"} · {t.hint}
           </p>
         </section>
 

@@ -7,8 +7,38 @@ import { PaymentsService } from "../payments/payments.service";
 import { TenantsService } from "../tenants/tenants.service";
 import { UssdRequestDto } from "./dto";
 
-const DEFAULT_JOURNEY = "civil-status-birth-certificate";
+const HOME_STEP = "__home__";
 const SESSION_TTL_MS = 72 * 60 * 60 * 1000;
+
+const SERVICE_CATALOG: Record<
+  string,
+  { journeyId: string; label: Record<LocaleCode, string> }
+> = {
+  "1": {
+    journeyId: "civil-status-birth-certificate",
+    label: {
+      fr: "Acte de naissance",
+      ee: "Dzidzɔ ŋkɔ ŋuti agbalẽ",
+      en: "Birth certificate",
+    },
+  },
+  "2": {
+    journeyId: "appointment-booking",
+    label: {
+      fr: "Rendez-vous",
+      ee: "Gbeƒãɖeɖe",
+      en: "Appointment",
+    },
+  },
+  "3": {
+    journeyId: "bill-payment",
+    label: {
+      fr: "Paiement facture",
+      ee: "Akɔnta gaƒoƒo",
+      en: "Bill payment",
+    },
+  },
+};
 
 @Injectable()
 export class UssdService {
@@ -23,7 +53,6 @@ export class UssdService {
   async handle(dto: UssdRequestDto) {
     const tenant = this.tenants.get(dto.tenantId);
     const locale = (dto.locale ?? tenant.defaultLocale) as LocaleCode;
-    const journey = this.journeys.get(DEFAULT_JOURNEY, tenant.id);
 
     let session = dto.sessionId
       ? await this.prisma.channelSession.findUnique({
@@ -38,23 +67,36 @@ export class UssdService {
           channel: "ussd",
           phoneNumber: dto.phoneNumber,
           locale,
-          journeyId: journey.id,
-          currentStepId: journey.startStepId,
+          journeyId: null,
+          currentStepId: HOME_STEP,
           answersJson: "{}",
           expiresAt: new Date(Date.now() + SESSION_TTL_MS),
         },
       });
 
-      const start = this.journeys.getStep(journey, journey.startStepId);
       return {
         sessionId: session.id,
         continue: true,
-        message: this.journeys.renderPrompt(start, locale),
-        stepId: start.id,
+        message: this.homePrompt(locale),
+        stepId: HOME_STEP,
       };
     }
 
     const answers = JSON.parse(session.answersJson) as Record<string, string>;
+    const input = (dto.input ?? "").trim();
+
+    if (!session.journeyId || session.currentStepId === HOME_STEP) {
+      return this.handleHome({
+        sessionId: session.id,
+        input,
+        answers,
+        locale,
+        phoneNumber: dto.phoneNumber,
+        tenantId: tenant.id,
+      });
+    }
+
+    const journey = this.journeys.get(session.journeyId, tenant.id);
     const currentStep = this.journeys.getStep(
       journey,
       session.currentStepId ?? journey.startStepId,
@@ -63,12 +105,11 @@ export class UssdService {
     const next = await this.advance({
       journey,
       step: currentStep,
-      input: (dto.input ?? "").trim(),
+      input,
       answers,
       locale,
       phoneNumber: dto.phoneNumber,
       tenantId: tenant.id,
-      sessionId: session.id,
     });
 
     await this.prisma.channelSession.update({
@@ -91,6 +132,88 @@ export class UssdService {
     };
   }
 
+  private homePrompt(locale: LocaleCode): string {
+    if (locale === "en") {
+      return "Allô Services Togo\n1. Birth certificate\n2. Appointment\n3. Bill payment\n0. Agent";
+    }
+    if (locale === "ee") {
+      return "Allô Services Togo\n1. Dzidzɔ ŋkɔ ŋuti agbalẽ\n2. Gbeƒãɖeɖe\n3. Akɔnta gaƒoƒo\n0. Ame";
+    }
+    return "Allô Services Togo\n1. Acte de naissance\n2. Rendez-vous\n3. Paiement facture\n0. Agent";
+  }
+
+  private async handleHome(params: {
+    sessionId: string;
+    input: string;
+    answers: Record<string, string>;
+    locale: LocaleCode;
+    phoneNumber: string;
+    tenantId: string;
+  }) {
+    const { sessionId, input, answers, locale, phoneNumber, tenantId } = params;
+
+    if (!input) {
+      return {
+        sessionId,
+        continue: true,
+        message: this.homePrompt(locale),
+        stepId: HOME_STEP,
+      };
+    }
+
+    if (input === "0") {
+      await this.prisma.channelSession.update({
+        where: { id: sessionId },
+        data: {
+          currentStepId: "end_agent",
+          expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+        },
+      });
+      return {
+        sessionId,
+        continue: false,
+        message:
+          locale === "en"
+            ? "An agent will call you shortly."
+            : "Un agent vous rappellera sous peu.",
+        stepId: "end_agent",
+      };
+    }
+
+    const service = SERVICE_CATALOG[input];
+    if (!service) {
+      return {
+        sessionId,
+        continue: true,
+        message:
+          (locale === "en" ? "Invalid choice.\n" : "Choix invalide.\n") +
+          this.homePrompt(locale),
+        stepId: HOME_STEP,
+      };
+    }
+
+    const journey = this.journeys.get(service.journeyId, tenantId);
+    answers.serviceChoice = input;
+    const start = this.journeys.getStep(journey, journey.startStepId);
+
+    await this.prisma.channelSession.update({
+      where: { id: sessionId },
+      data: {
+        journeyId: journey.id,
+        currentStepId: start.id,
+        answersJson: JSON.stringify(answers),
+        expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      },
+    });
+
+    return {
+      sessionId,
+      continue: true,
+      message: this.journeys.renderPrompt(start, locale),
+      stepId: start.id,
+    };
+  }
+
   private async advance(params: {
     journey: JourneyDefinition;
     step: JourneyStep;
@@ -99,7 +222,6 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenantId: string;
-    sessionId: string;
   }): Promise<{
     stepId: string;
     answers: Record<string, string>;
@@ -126,6 +248,10 @@ export class UssdService {
                 : "Choix invalide.\n") +
             this.journeys.renderPrompt(step, locale),
         };
+      }
+      if (step.field) {
+        answers[step.field] =
+          option.label?.[locale] ?? option.label?.fr ?? option.key;
       }
       return this.enterStep({
         journey,
@@ -206,12 +332,17 @@ export class UssdService {
         answers: params.answers,
       });
 
-      await this.payments.payByTrackingNumber(created.trackingNumber, {
-        phoneNumber: params.phoneNumber,
-      });
+      if (created.feeAmount > 0) {
+        await this.payments.payByTrackingNumber(created.trackingNumber, {
+          phoneNumber: params.phoneNumber,
+        });
+      }
 
       params.answers.trackingNumber = created.trackingNumber;
-      const end = this.journeys.getStep(params.journey, step.next ?? "end_success");
+      const end = this.journeys.getStep(
+        params.journey,
+        step.next ?? "end_success",
+      );
       return {
         stepId: end.id,
         answers: params.answers,

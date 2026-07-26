@@ -1,0 +1,109 @@
+{
+  "id": "appointment-booking",
+  "version": "1.0.0",
+  "tenantId": "tg",
+  "serviceCode": "RDV_SANTE",
+  "title": {
+    "fr": "Prise de rendez-vous",
+    "ee": "Gbeƒãɖeɖe ŋuti ɣeyiɣi",
+    "en": "Appointment booking"
+  },
+  "feeAmount": 0,
+  "feeCurrency": "XOF",
+  "startStepId": "input_facility",
+  "steps": [
+    {
+      "id": "input_facility",
+      "type": "menu",
+      "field": "facilityType",
+      "prompt": {
+        "fr": "Rendez-vous\n1. Centre de santé\n2. Mairie / état civil\n3. Vaccination\n0. Agent",
+        "ee": "Gbeƒãɖeɖe\n1. Lãmesẽƒe\n2. Duƒoƒo\n3. Atikewɔwɔ\n0. Ame",
+        "en": "Appointment\n1. Health centre\n2. Town hall / civil status\n3. Vaccination\n0. Agent"
+      },
+      "options": [
+        { "key": "1", "label": { "fr": "Santé", "en": "Health", "ee": "Lãmesẽ" }, "next": "input_date" },
+        { "key": "2", "label": { "fr": "Mairie", "en": "Town hall", "ee": "Duƒoƒo" }, "next": "input_date" },
+        { "key": "3", "label": { "fr": "Vaccination", "en": "Vaccination", "ee": "Atike" }, "next": "input_date" },
+        { "key": "0", "label": { "fr": "Agent", "en": "Agent", "ee": "Ame" }, "next": "end_agent" }
+      ]
+    },
+    {
+      "id": "input_date",
+      "type": "input",
+      "prompt": {
+        "fr": "Date souhaitée (JJ/MM/AAAA) ?",
+        "ee": "Ŋkeke si nèdi (ŊD/ŊA/ƑE)?",
+        "en": "Preferred date (DD/MM/YYYY)?"
+      },
+      "field": "appointmentDate",
+      "validation": { "pattern": "^\\d{2}/\\d{2}/\\d{4}$" },
+      "next": "input_slot"
+    },
+    {
+      "id": "input_slot",
+      "type": "menu",
+      "field": "timeSlot",
+      "prompt": {
+        "fr": "Créneau\n1. Matin (08h-12h)\n2. Après-midi (14h-17h)\n0. Agent",
+        "ee": "Ɣeyiɣi\n1. Ŋdi\n2. Ŋdɔ\n0. Ame",
+        "en": "Slot\n1. Morning\n2. Afternoon\n0. Agent"
+      },
+      "options": [
+        { "key": "1", "label": { "fr": "Matin", "en": "Morning", "ee": "Ŋdi" }, "next": "confirm_rdv" },
+        { "key": "2", "label": { "fr": "Après-midi", "en": "Afternoon", "ee": "Ŋdɔ" }, "next": "confirm_rdv" },
+        { "key": "0", "label": { "fr": "Agent", "en": "Agent", "ee": "Ame" }, "next": "end_agent" }
+      ]
+    },
+    {
+      "id": "confirm_rdv",
+      "type": "confirm",
+      "prompt": {
+        "fr": "Confirmer le rendez-vous ?\n1. Oui\n2. Non",
+        "ee": "Ðo kpe gbeƒãɖeɖe?\n1. Ɛ\n2. Ao",
+        "en": "Confirm appointment?\n1. Yes\n2. No"
+      },
+      "options": [
+        { "key": "1", "label": { "fr": "Oui", "en": "Yes", "ee": "Ɛ" }, "next": "payment" },
+        { "key": "2", "label": { "fr": "Non", "en": "No", "ee": "Ao" }, "next": "end_cancelled" }
+      ]
+    },
+    {
+      "id": "payment",
+      "type": "payment",
+      "prompt": {
+        "fr": "Enregistrement du rendez-vous…",
+        "ee": "Gbeƒãɖeɖe ŋɔŋlɔ…",
+        "en": "Booking appointment…"
+      },
+      "next": "end_success"
+    },
+    {
+      "id": "end_success",
+      "type": "end",
+      "prompt": {
+        "fr": "RDV enregistré. Suivi: {{trackingNumber}}. Un SMS de confirmation a été envoyé.",
+        "ee": "Gbeƒãɖeɖe wɔe. Dzodzro: {{trackingNumber}}.",
+        "en": "Appointment booked. Tracking: {{trackingNumber}}."
+      }
+    },
+    {
+      "id": "end_cancelled",
+      "type": "end",
+      "prompt": {
+        "fr": "Prise de rendez-vous annulée.",
+        "ee": "Gbeƒãɖeɖe wotɔ.",
+        "en": "Appointment cancelled."
+      }
+    },
+    {
+      "id": "end_agent",
+      "type": "end",
+      "prompt": {
+        "fr": "Un agent vous rappellera sous peu.",
+        "ee": "Ame aɖe agblɔ na wò kaba.",
+        "en": "An agent will call you shortly."
+      }
+    }
+  ]
+}

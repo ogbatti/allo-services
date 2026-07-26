@@ -10,21 +10,8 @@
   },
   "feeAmount": 500,
   "feeCurrency": "XOF",
-  "startStepId": "menu_start",
+  "startStepId": "input_child_name",
   "steps": [
-    {
-      "id": "menu_start",
-      "type": "menu",
-      "prompt": {
-        "fr": "Allô Services Togo\n1. Demander un acte de naissance\n0. Agent",
-        "ee": "Allô Services Togo\n1. Bi dzidzɔ ŋkɔ ŋuti agbalẽ\n0. Ame",
-        "en": "Allô Services Togo\n1. Request a birth certificate\n0. Agent"
-      },
-      "options": [
-        { "key": "1", "label": { "fr": "Demander", "en": "Request", "ee": "Bi" }, "next": "input_child_name" },
-        { "key": "0", "label": { "fr": "Agent", "en": "Agent", "ee": "Ame" }, "next": "end_agent" }
-      ]
-    },
     {
       "id": "input_child_name",
       "type": "input",
