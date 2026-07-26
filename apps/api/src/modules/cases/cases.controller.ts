@@ -30,7 +30,16 @@ export class CasesController {
   }
 
   @Patch(":trackingNumber/instruct")
-  instruct(
+  instructPatch(
+    @Param("trackingNumber") trackingNumber: string,
+    @Body() dto: InstructCaseDto,
+  ) {
+    return this.cases.instruct(trackingNumber, dto);
+  }
+
+  /** POST alias — some clients/proxies handle PATCH poorly */
+  @Post(":trackingNumber/instruct")
+  instructPost(
     @Param("trackingNumber") trackingNumber: string,
     @Body() dto: InstructCaseDto,
   ) {

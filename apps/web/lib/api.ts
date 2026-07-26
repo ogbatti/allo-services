@@ -117,7 +117,7 @@ export function instructCase(
   return request<CaseDetails>(
     `/cases/${encodeURIComponent(trackingNumber)}/instruct`,
     {
-      method: "PATCH",
+      method: "POST",
       body: JSON.stringify(body),
     },
   );

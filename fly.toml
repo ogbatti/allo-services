@@ -16,7 +16,8 @@ primary_region = "cdg"
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true
-  min_machines_running = 0
+  # Keep one machine warm for the public demo (avoids cold-start 404/timeouts)
+  min_machines_running = 1
   processes = ["app"]
 
   [[http_service.checks]]
