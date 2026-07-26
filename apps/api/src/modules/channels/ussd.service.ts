@@ -1,5 +1,17 @@
 import { Injectable } from "@nestjs/common";
-import type { JourneyDefinition, JourneyStep, LocaleCode } from "@allo/shared";
+import type {
+  JourneyDefinition,
+  JourneyStep,
+  LocaleCode,
+  TenantConfig,
+} from "@allo/shared";
+import {
+  SERVICE_CODE_ORDER,
+  getServicePack,
+  moduleForService,
+  packLabel,
+  pickLocale,
+} from "@allo/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import { CasesService } from "../cases/cases.service";
 import { JourneysService } from "../journeys/journeys.service";
@@ -9,36 +21,6 @@ import { UssdRequestDto } from "./dto";
 
 const HOME_STEP = "__home__";
 const SESSION_TTL_MS = 72 * 60 * 60 * 1000;
-
-const SERVICE_CATALOG: Record<
-  string,
-  { journeyId: string; label: Record<LocaleCode, string> }
-> = {
-  "1": {
-    journeyId: "civil-status-birth-certificate",
-    label: {
-      fr: "Acte de naissance",
-      ee: "Dzidzɔ ŋkɔ ŋuti agbalẽ",
-      en: "Birth certificate",
-    },
-  },
-  "2": {
-    journeyId: "appointment-booking",
-    label: {
-      fr: "Rendez-vous",
-      ee: "Gbeƒãɖeɖe",
-      en: "Appointment",
-    },
-  },
-  "3": {
-    journeyId: "bill-payment",
-    label: {
-      fr: "Paiement facture",
-      ee: "Akɔnta gaƒoƒo",
-      en: "Bill payment",
-    },
-  },
-};
 
 @Injectable()
 export class UssdService {
@@ -77,7 +59,7 @@ export class UssdService {
       return {
         sessionId: session.id,
         continue: true,
-        message: this.homePrompt(locale),
+        message: this.homePrompt(tenant, locale),
         stepId: HOME_STEP,
       };
     }
@@ -92,7 +74,7 @@ export class UssdService {
         answers,
         locale,
         phoneNumber: dto.phoneNumber,
-        tenantId: tenant.id,
+        tenant,
       });
     }
 
@@ -132,14 +114,44 @@ export class UssdService {
     };
   }
 
-  private homePrompt(locale: LocaleCode): string {
-    if (locale === "en") {
-      return "Allô Services Togo\n1. Birth certificate\n2. Appointment\n3. Bill payment\n0. Agent";
+  /** Menu entries = tenant journeys whose service-pack module is enabled. */
+  private catalogForTenant(tenant: TenantConfig) {
+    const enabled = this.journeys
+      .list(tenant.id)
+      .filter((j) => {
+        const mod = moduleForService(j.serviceCode);
+        return mod ? tenant.modules.includes(mod) : false;
+      })
+      .sort((a, b) => {
+        const ia = SERVICE_CODE_ORDER.indexOf(
+          a.serviceCode as (typeof SERVICE_CODE_ORDER)[number],
+        );
+        const ib = SERVICE_CODE_ORDER.indexOf(
+          b.serviceCode as (typeof SERVICE_CODE_ORDER)[number],
+        );
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+      });
+
+    return enabled.map((journey, index) => ({
+      key: String(index + 1),
+      journeyId: journey.id,
+      serviceCode: journey.serviceCode,
+      title: journey.title,
+    }));
+  }
+
+  private homePrompt(tenant: TenantConfig, locale: LocaleCode): string {
+    const country = pickLocale(tenant.name, locale);
+    const lines = [`Allô Services ${country}`];
+    for (const entry of this.catalogForTenant(tenant)) {
+      const pack = getServicePack(entry.serviceCode);
+      const label =
+        packLabel(pack, locale) ||
+        pickLocale(entry.title, locale);
+      lines.push(`${entry.key}. ${label}`);
     }
-    if (locale === "ee") {
-      return "Allô Services Togo\n1. Dzidzɔ ŋkɔ ŋuti agbalẽ\n2. Gbeƒãɖeɖe\n3. Akɔnta gaƒoƒo\n0. Ame";
-    }
-    return "Allô Services Togo\n1. Acte de naissance\n2. Rendez-vous\n3. Paiement facture\n0. Agent";
+    lines.push(locale === "en" ? "0. Agent" : locale === "ee" ? "0. Ame" : "0. Agent");
+    return lines.join("\n");
   }
 
   private async handleHome(params: {
@@ -148,15 +160,16 @@ export class UssdService {
     answers: Record<string, string>;
     locale: LocaleCode;
     phoneNumber: string;
-    tenantId: string;
+    tenant: TenantConfig;
   }) {
-    const { sessionId, input, answers, locale, phoneNumber, tenantId } = params;
+    const { sessionId, input, answers, locale, tenant } = params;
+    const catalog = this.catalogForTenant(tenant);
 
     if (!input) {
       return {
         sessionId,
         continue: true,
-        message: this.homePrompt(locale),
+        message: this.homePrompt(tenant, locale),
         stepId: HOME_STEP,
       };
     }
@@ -180,19 +193,19 @@ export class UssdService {
       };
     }
 
-    const service = SERVICE_CATALOG[input];
+    const service = catalog.find((c) => c.key === input);
     if (!service) {
       return {
         sessionId,
         continue: true,
         message:
           (locale === "en" ? "Invalid choice.\n" : "Choix invalide.\n") +
-          this.homePrompt(locale),
+          this.homePrompt(tenant, locale),
         stepId: HOME_STEP,
       };
     }
 
-    const journey = this.journeys.get(service.journeyId, tenantId);
+    const journey = this.journeys.get(service.journeyId, tenant.id);
     answers.serviceChoice = input;
     const start = this.journeys.getStep(journey, journey.startStepId);
 

@@ -130,6 +130,16 @@ export type Instructor = {
   role: string;
 };
 
+export type TenantSummary = {
+  id: string;
+  countryCode: string;
+  name: { fr: string; ee?: string; en?: string };
+  defaultLocale: string;
+  supportedLocales: string[];
+  ussdShortCode: string;
+  modules: string[];
+};
+
 export function ussdStep(body: {
   tenantId: string;
   phoneNumber: string;
@@ -215,4 +225,8 @@ export function listNotifications(tenantId = "tg") {
       createdAt: string;
     }>
   >(`/notifications?tenantId=${tenantId}`);
+}
+
+export function listTenants() {
+  return request<TenantSummary[]>("/tenants");
 }

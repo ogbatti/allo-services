@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useCallback, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 import {
   CaseDetails,
   CaseSummary,
@@ -16,39 +16,28 @@ import {
   meInstructor,
   setToken,
 } from "@/lib/api";
-
-const STATUS_LABELS: Record<string, string> = {
-  in_review: "En instruction",
-  incomplete: "Incomplet",
-  ready: "Prêt",
-  delivered: "Remis",
-  rejected: "Rejeté",
-  awaiting_payment: "Attente paiement",
-  closed: "Clos",
-  cancelled: "Annulé",
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  ready: "Marquer prêt",
-  incomplete: "Demander complément",
-  rejected: "Rejeter",
-  delivered: "Marquer remis",
-  closed: "Clôturer",
-  in_review: "Reprendre instruction",
-};
-
-const SERVICE_LABELS: Record<string, string> = {
-  ETC_ACTE_NAISSANCE: "État civil",
-  RDV_SANTE: "Rendez-vous",
-  PAY_FACTURE: "Factures",
-};
+import {
+  SERVICE_OPTIONS,
+  actionLabel,
+  getServicePackUi,
+  statusLabel,
+} from "@/lib/service-packs";
 
 type Filter = "inbox" | "all" | "ready" | "rejected";
+
+const TENANT_CREDENTIALS: Record<
+  string,
+  { email: string; label: string }
+> = {
+  tg: { email: "instructeur@lome.tg", label: "Togo (TG)" },
+  bj: { email: "instructeur@cotonou.bj", label: "Bénin (BJ)" },
+};
 
 export default function BackofficePage() {
   const [authReady, setAuthReady] = useState(false);
   const [instructor, setInstructor] = useState<Instructor | null>(null);
-  const [email, setEmail] = useState("instructeur@lome.tg");
+  const [tenantId, setTenantId] = useState("tg");
+  const [email, setEmail] = useState(TENANT_CREDENTIALS.tg.email);
   const [password, setPassword] = useState("Demo2026!");
   const [filter, setFilter] = useState<Filter>("inbox");
   const [serviceCode, setServiceCode] = useState("");
@@ -59,6 +48,18 @@ export default function BackofficePage() {
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
 
+  const selectedPack = useMemo(
+    () => (selected ? getServicePackUi(selected.serviceCode) : null),
+    [selected],
+  );
+
+  const serviceFilterOptions = useMemo(() => {
+    if (tenantId === "bj") {
+      return SERVICE_OPTIONS.filter((s) => s.code !== "PAY_FACTURE");
+    }
+    return SERVICE_OPTIONS;
+  }, [tenantId]);
+
   useEffect(() => {
     const token = getToken();
     if (!token) {
@@ -66,22 +67,26 @@ export default function BackofficePage() {
       return;
     }
     meInstructor()
-      .then((user) => setInstructor(user))
+      .then((user) => {
+        setInstructor(user);
+        setTenantId(user.tenantId);
+      })
       .catch(() => setToken(null))
       .finally(() => setAuthReady(true));
   }, []);
 
   const refresh = useCallback(async () => {
     if (!instructor) return;
+    const tid = instructor.tenantId;
     setBusy(true);
     setError(null);
     try {
       const rows =
         filter === "inbox"
-          ? await listInbox("tg")
+          ? await listInbox(tid)
           : filter === "all"
-            ? await listCases("tg", undefined, serviceCode || undefined)
-            : await listCases("tg", filter, serviceCode || undefined);
+            ? await listCases(tid, undefined, serviceCode || undefined)
+            : await listCases(tid, filter, serviceCode || undefined);
       const filtered =
         filter === "inbox" && serviceCode
           ? rows.filter((r) => r.serviceCode === serviceCode)
@@ -98,18 +103,25 @@ export default function BackofficePage() {
     void refresh();
   }, [refresh]);
 
+  function onTenantPick(id: string) {
+    setTenantId(id);
+    const cred = TENANT_CREDENTIALS[id];
+    if (cred) setEmail(cred.email);
+  }
+
   async function onLogin(e: FormEvent) {
     e.preventDefault();
     setBusy(true);
     setError(null);
     try {
       const res = await loginInstructor({
-        tenantId: "tg",
+        tenantId,
         email,
         password,
       });
       setToken(res.accessToken);
       setInstructor(res.instructor);
+      setTenantId(res.instructor.tenantId);
       setOk(`Connecté: ${res.instructor.name}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Connexion impossible");
@@ -151,7 +163,9 @@ export default function BackofficePage() {
         note: note.trim() || undefined,
       });
       setSelected(updated);
-      setOk(`Statut mis à jour → ${STATUS_LABELS[toStatus] ?? toStatus}`);
+      setOk(
+        `Statut mis à jour → ${statusLabel(updated.serviceCode, toStatus)}`,
+      );
       setNote("");
       await refresh();
     } catch (err) {
@@ -185,6 +199,21 @@ export default function BackofficePage() {
           <Link href="/">← Démo citoyen</Link>
         </p>
         <form className="panel" onSubmit={onLogin} style={{ maxWidth: 420 }}>
+          <label className="meta" htmlFor="tenant">
+            Tenant
+          </label>
+          <select
+            id="tenant"
+            value={tenantId}
+            onChange={(e) => onTenantPick(e.target.value)}
+            style={{ width: "100%", margin: "0.4rem 0 0.85rem" }}
+          >
+            {Object.entries(TENANT_CREDENTIALS).map(([id, cred]) => (
+              <option key={id} value={id}>
+                {cred.label}
+              </option>
+            ))}
+          </select>
           <label className="meta" htmlFor="email">
             E-mail
           </label>
@@ -214,7 +243,7 @@ export default function BackofficePage() {
             Se connecter
           </button>
           <p className="meta" style={{ marginTop: "0.85rem" }}>
-            Démo TG : instructeur@lome.tg / Demo2026!
+            TG: instructeur@lome.tg · BJ: instructeur@cotonou.bj · Demo2026!
           </p>
         </form>
       </main>
@@ -228,11 +257,12 @@ export default function BackofficePage() {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap"
       />
 
-      <p className="tag">Back-office · Tenant TG</p>
+      <p className="tag">
+        Back-office · Tenant {instructor.tenantId.toUpperCase()}
+      </p>
       <h1 className="brand">Instruction des dossiers</h1>
       <p className="lede">
-        État civil, rendez-vous et factures. Validez, demandez un complément ou
-        rejetez — un SMS est envoyé à l&apos;usager.
+        Actions et SMS adaptés au type de service (état civil, RDV, factures).
       </p>
 
       <div className="row" style={{ marginBottom: "1rem" }}>
@@ -262,18 +292,25 @@ export default function BackofficePage() {
           onChange={(e) => setServiceCode(e.target.value)}
         >
           <option value="">Tous services</option>
-          <option value="ETC_ACTE_NAISSANCE">État civil</option>
-          <option value="RDV_SANTE">Rendez-vous</option>
-          <option value="PAY_FACTURE">Factures</option>
+          {serviceFilterOptions.map((s) => (
+            <option key={s.code} value={s.code}>
+              {s.label}
+            </option>
+          ))}
         </select>
       </div>
 
-      <div className="langs" role="group" aria-label="Filtre" style={{ marginTop: "1rem" }}>
+      <div
+        className="langs"
+        role="group"
+        aria-label="Filtre"
+        style={{ marginTop: "1rem" }}
+      >
         {(
           [
             ["inbox", "À instruire"],
             ["all", "Tous"],
-            ["ready", "Prêts"],
+            ["ready", "Prêts / confirmés"],
             ["rejected", "Rejetés"],
           ] as const
         ).map(([key, label]) => (
@@ -319,8 +356,8 @@ export default function BackofficePage() {
                 >
                   <strong>{c.trackingNumber}</strong>
                   <span className="meta">
-                    {STATUS_LABELS[c.status] ?? c.status} ·{" "}
-                    {SERVICE_LABELS[c.serviceCode] ?? c.serviceCode}
+                    {statusLabel(c.serviceCode, c.status)} ·{" "}
+                    {getServicePackUi(c.serviceCode).label}
                   </span>
                   <span className="meta">{c.phoneNumber}</span>
                 </button>
@@ -331,20 +368,23 @@ export default function BackofficePage() {
 
         <section className="panel">
           <h2>Dossier</h2>
-          {!selected ? (
+          {!selected || !selectedPack ? (
             <p className="meta">Sélectionnez un dossier à gauche.</p>
           ) : (
             <>
               <div className="item">
                 <strong>{selected.trackingNumber}</strong>
                 <span className="meta">
-                  {STATUS_LABELS[selected.status] ?? selected.status} ·{" "}
-                  {SERVICE_LABELS[selected.serviceCode] ?? selected.serviceCode}
+                  {statusLabel(selected.serviceCode, selected.status)} ·{" "}
+                  {selectedPack.label}
                 </span>
                 <span className="meta">
                   {selected.phoneNumber} · {selected.channel} ·{" "}
                   {selected.feeAmount} {selected.feeCurrency}
                 </span>
+                <p className="meta" style={{ marginTop: "0.5rem" }}>
+                  {selectedPack.instructHint}
+                </p>
                 <pre className="meta" style={{ whiteSpace: "pre-wrap" }}>
                   {JSON.stringify(selected.payload, null, 2)}
                 </pre>
@@ -362,7 +402,7 @@ export default function BackofficePage() {
                 rows={3}
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                placeholder="Ex. photo d'identité illisible"
+                placeholder={selectedPack.noteHint}
                 style={{ width: "100%", marginTop: "0.4rem" }}
               />
 
@@ -378,7 +418,7 @@ export default function BackofficePage() {
                     onClick={() => void runAction(status)}
                     className={status === "rejected" ? "secondary" : undefined}
                   >
-                    {ACTION_LABELS[status] ?? status}
+                    {actionLabel(selected.serviceCode, status)}
                   </button>
                 ))}
               </div>

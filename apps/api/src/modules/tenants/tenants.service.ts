@@ -30,6 +30,10 @@ export class TenantsService implements OnModuleInit {
     return tenant;
   }
 
+  hasModule(tenantId: string, moduleId: string): boolean {
+    return this.get(tenantId).modules.includes(moduleId);
+  }
+
   private async loadFromDiskAndSync() {
     const dir = join(resolveConfigDir(), "tenants");
     const files = readdirSync(dir).filter((f) => f.endsWith(".json"));

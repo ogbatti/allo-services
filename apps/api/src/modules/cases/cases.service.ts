@@ -4,6 +4,11 @@ import {
   NotFoundException,
 } from "@nestjs/common";
 import type { CaseStatus, ChannelCode, LocaleCode } from "@allo/shared";
+import {
+  fillTemplate,
+  getServicePack,
+  pickLocale,
+} from "@allo/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import { JourneysService } from "../journeys/journeys.service";
 import { NotificationsService } from "../notifications/notifications.service";
@@ -177,6 +182,7 @@ export class CasesService {
       trackingNumber: current.trackingNumber,
       phoneNumber: current.phoneNumber,
       locale: current.locale as LocaleCode,
+      serviceCode: current.serviceCode,
       toStatus: dto.toStatus,
       note: dto.note?.trim(),
     });
@@ -233,47 +239,35 @@ export class CasesService {
     trackingNumber: string;
     phoneNumber: string;
     locale: LocaleCode;
+    serviceCode: string;
     toStatus: CaseStatus;
     note?: string;
   }) {
-    const { locale, trackingNumber, toStatus, note } = params;
-    let body: string | null = null;
+    const { locale, trackingNumber, toStatus, note, serviceCode } = params;
+    const pack = getServicePack(serviceCode);
+    const vars = {
+      trackingNumber,
+      note: note?.trim() || "—",
+    };
 
+    let template: string | null = null;
     if (toStatus === "ready") {
-      body =
-        locale === "en"
-          ? `Allô Services: document ready for ${trackingNumber}. Collect via agent or download when available.`
-          : locale === "ee"
-            ? `Allô Services: agbalẽ ${trackingNumber} ɖo. Vá xɔe to ame gbɔ.`
-            : `Allô Services: document prêt pour ${trackingNumber}. Retrait agent ou téléchargement selon commune.`;
+      template = pickLocale(pack.sms.ready, locale);
     } else if (toStatus === "rejected") {
-      body =
-        locale === "en"
-          ? `Allô Services: request ${trackingNumber} rejected. Reason: ${note}`
-          : locale === "ee"
-            ? `Allô Services: biabia ${trackingNumber} wogbe. Nukata: ${note}`
-            : `Allô Services: dossier ${trackingNumber} rejeté. Motif: ${note}`;
+      template = pickLocale(pack.sms.rejected, locale);
     } else if (toStatus === "incomplete") {
-      body =
-        locale === "en"
-          ? `Allô Services: ${trackingNumber} incomplete. Missing: ${note}`
-          : locale === "ee"
-            ? `Allô Services: ${trackingNumber} meɖe go o. Susu: ${note}`
-            : `Allô Services: dossier ${trackingNumber} incomplet. Manque: ${note}`;
+      template = pickLocale(pack.sms.incomplete, locale);
     } else if (toStatus === "delivered") {
-      body =
-        locale === "en"
-          ? `Allô Services: document ${trackingNumber} marked as delivered.`
-          : `Allô Services: document ${trackingNumber} remis.`;
+      template = pickLocale(pack.sms.delivered, locale);
     }
 
-    if (!body) return;
+    if (!template) return;
 
     await this.notifications.sendSms({
       tenantId: params.tenantId,
       caseId: params.caseId,
       recipient: params.phoneNumber,
-      body,
+      body: fillTemplate(template, vars),
     });
   }
 

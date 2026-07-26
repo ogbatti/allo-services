@@ -15,6 +15,13 @@ const DEMO_INSTRUCTORS = [
     password: "Demo2026!",
     role: "instructor",
   },
+  {
+    tenantId: "bj",
+    email: "instructeur@cotonou.bj",
+    name: "Agent Mairie Cotonou",
+    password: "Demo2026!",
+    role: "instructor",
+  },
 ];
 
 @Injectable()

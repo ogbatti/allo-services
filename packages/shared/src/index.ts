@@ -158,3 +158,17 @@ export function pickLocale(
 ): string {
   return text[locale] ?? text.fr;
 }
+
+export {
+  SERVICE_PACKS,
+  SERVICE_MODULE,
+  SERVICE_CODE_ORDER,
+  getServicePack,
+  moduleForService,
+  fillTemplate,
+  packLabel,
+} from "./service-packs";
+export type {
+  ServicePackDefinition,
+  InstructAction,
+} from "./service-packs";

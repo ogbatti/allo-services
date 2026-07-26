@@ -1,25 +1,57 @@
 "use client";
 
 import Link from "next/link";
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   CaseDetails,
+  TenantSummary,
   getCase,
   listNotifications,
+  listTenants,
   ussdStep,
   type UssdResponse,
 } from "@/lib/api";
 
 type Locale = "fr" | "ee" | "en";
 
+const TENANT_META: Record<
+  string,
+  { phone: string; hint: Record<Locale, string>; ledeExtra: Record<"fr" | "en", string> }
+> = {
+  tg: {
+    phone: "+22890000001",
+    hint: {
+      fr: "Menu: 1 acte · 2 RDV · 3 facture",
+      ee: "Menu: 1 agbalẽ · 2 RDV · 3 akɔnta",
+      en: "Menu: 1 birth cert · 2 appointment · 3 bill",
+    },
+    ledeExtra: {
+      fr: "Pack complet (état civil, RDV, factures).",
+      en: "Full pack (civil status, appointments, bills).",
+    },
+  },
+  bj: {
+    phone: "+22990000001",
+    hint: {
+      fr: "Menu: 1 acte · 2 RDV (pas de factures)",
+      ee: "Menu: 1 agbalẽ · 2 RDV",
+      en: "Menu: 1 birth cert · 2 appointment (no bills)",
+    },
+    ledeExtra: {
+      fr: "Pack réduit — modules factures désactivés (paramétrage).",
+      en: "Thinner pack — bill modules off (configuration).",
+    },
+  },
+};
+
 const copy = {
   fr: {
     brand: "Allô Services",
-    lede: "Démo multi-services (Togo) — acte de naissance, rendez-vous, factures · paiement et SMS simulés.",
-    ussdTitle: "Simulateur USSD (*855#)",
+    lede: "Démo multi-tenant — parcours configurables, paiement et SMS simulés.",
+    ussdTitle: "Simulateur USSD",
     trackTitle: "Suivi de dossier",
     smsTitle: "Boîte SMS (simulateur)",
-    start: "Composer *855#",
+    start: "Composer",
     send: "Envoyer",
     reset: "Nouvelle session",
     track: "Rechercher",
@@ -27,15 +59,15 @@ const copy = {
     phone: "Numéro",
     input: "Saisie USSD",
     tracking: "N° de suivi",
-    hint: "Menu: 1 acte · 2 RDV · 3 facture",
+    tenant: "Pays / tenant",
   },
   ee: {
     brand: "Allô Services",
-    lede: "Nɔnɔmetɔ — dzidzɔ ŋkɔ ŋuti agbalẽ biabia (Togo), gaƒoƒo kple SMS.",
-    ussdTitle: "USSD simule (*855#)",
+    lede: "Nɔnɔmetɔ — dukɔwo ƒe nɔnɔmetɔwo, gaƒoƒo kple SMS.",
+    ussdTitle: "USSD simule",
     trackTitle: "Nutome dzodzro",
     smsTitle: "SMS ƒe agba (simule)",
-    start: "Ŋlɔ *855#",
+    start: "Ŋlɔ",
     send: "Ɖo",
     reset: "Gbugbɔ dze egɔme",
     track: "Di",
@@ -43,15 +75,15 @@ const copy = {
     phone: "Ka ƒe xexlẽdzesi",
     input: "USSD ŋɔŋlɔ",
     tracking: "Dzodzro xexlẽdzesi",
-    hint: "Menu: 1 agbalẽ · 2 RDV · 3 akɔnta",
+    tenant: "Dukɔ",
   },
   en: {
     brand: "Allô Services",
-    lede: "Multi-service demo (Togo) — birth certificate, appointments, bills · simulated payment and SMS.",
-    ussdTitle: "USSD simulator (*855#)",
+    lede: "Multi-tenant demo — configurable journeys, simulated payment and SMS.",
+    ussdTitle: "USSD simulator",
     trackTitle: "Case tracking",
     smsTitle: "SMS outbox (simulator)",
-    start: "Dial *855#",
+    start: "Dial",
     send: "Send",
     reset: "New session",
     track: "Look up",
@@ -59,15 +91,21 @@ const copy = {
     phone: "Phone number",
     input: "USSD input",
     tracking: "Tracking number",
-    hint: "Menu: 1 birth cert · 2 appointment · 3 bill",
+    tenant: "Country / tenant",
   },
 } as const;
 
 export default function HomePage() {
   const [locale, setLocale] = useState<Locale>("fr");
   const t = copy[locale];
+  const [tenants, setTenants] = useState<TenantSummary[]>([]);
+  const [tenantId, setTenantId] = useState("tg");
 
-  const [phoneNumber, setPhoneNumber] = useState("+22890000001");
+  const tenant = tenants.find((x) => x.id === tenantId);
+  const meta = TENANT_META[tenantId] ?? TENANT_META.tg;
+  const locales = (tenant?.supportedLocales ?? ["fr", "en"]) as Locale[];
+
+  const [phoneNumber, setPhoneNumber] = useState(meta.phone);
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [screen, setScreen] = useState("…");
   const [input, setInput] = useState("");
@@ -79,10 +117,43 @@ export default function HomePage() {
   >([]);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    listTenants()
+      .then((rows) => setTenants(rows.sort((a, b) => a.id.localeCompare(b.id))))
+      .catch(() =>
+        setTenants([
+          {
+            id: "tg",
+            countryCode: "TG",
+            name: { fr: "Togo", en: "Togo" },
+            defaultLocale: "fr",
+            supportedLocales: ["fr", "ee", "en"],
+            ussdShortCode: "*855#",
+            modules: [],
+          },
+        ]),
+      );
+  }, []);
+
+  useEffect(() => {
+    setPhoneNumber(meta.phone);
+    setSessionId(undefined);
+    setScreen("…");
+    setInput("");
+    setCaseDetails(null);
+    setTrackingNumber("");
+    setSms([]);
+    if (!locales.includes(locale)) setLocale("fr");
+  }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const canSend = useMemo(
     () => Boolean(sessionId) && input.trim().length > 0 && !busy,
     [sessionId, input, busy],
   );
+
+  const ussdLabel = tenant?.ussdShortCode ?? "*855#";
+  const countryName =
+    tenant?.name[locale] ?? tenant?.name.fr ?? tenantId.toUpperCase();
 
   async function applyUssd(res: UssdResponse) {
     setSessionId(res.sessionId);
@@ -100,7 +171,7 @@ export default function HomePage() {
     setError(null);
     try {
       const res = await ussdStep({
-        tenantId: "tg",
+        tenantId,
         phoneNumber,
         locale,
       });
@@ -120,7 +191,7 @@ export default function HomePage() {
     setError(null);
     try {
       const res = await ussdStep({
-        tenantId: "tg",
+        tenantId,
         phoneNumber,
         sessionId,
         input: input.trim(),
@@ -151,7 +222,7 @@ export default function HomePage() {
   }
 
   async function refreshSms() {
-    const rows = await listNotifications("tg");
+    const rows = await listNotifications(tenantId);
     setSms(rows);
   }
 
@@ -170,15 +241,40 @@ export default function HomePage() {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap"
       />
 
-      <p className="tag">Tenant TG · Apache-2.0 · MVP</p>
+      <p className="tag">
+        Tenant {tenantId.toUpperCase()} · Apache-2.0 · MVP
+      </p>
       <h1 className="brand">{t.brand}</h1>
-      <p className="lede">{t.lede}</p>
+      <p className="lede">
+        {t.lede}{" "}
+        {locale === "en" ? meta.ledeExtra.en : meta.ledeExtra.fr}
+      </p>
       <p className="meta" style={{ marginTop: "-1rem", marginBottom: "1.25rem" }}>
         <Link href="/backoffice">Back-office instructeur →</Link>
       </p>
 
+      <div className="row" style={{ marginBottom: "1rem" }}>
+        <label className="meta" htmlFor="tenant">
+          {t.tenant}
+        </label>
+        <select
+          id="tenant"
+          value={tenantId}
+          onChange={(e) => setTenantId(e.target.value)}
+          aria-label={t.tenant}
+        >
+          {(tenants.length ? tenants : [{ id: "tg", name: { fr: "Togo" } }]).map(
+            (row) => (
+              <option key={row.id} value={row.id}>
+                {row.id.toUpperCase()} — {row.name.fr}
+              </option>
+            ),
+          )}
+        </select>
+      </div>
+
       <div className="langs" role="group" aria-label="Language">
-        {(["fr", "ee", "en"] as Locale[]).map((code) => (
+        {locales.map((code) => (
           <button
             key={code}
             type="button"
@@ -199,7 +295,9 @@ export default function HomePage() {
 
       <div className="grid">
         <section className="panel">
-          <h2>{t.ussdTitle}</h2>
+          <h2>
+            {t.ussdTitle} ({ussdLabel})
+          </h2>
           <label className="meta" htmlFor="phone">
             {t.phone}
           </label>
@@ -210,7 +308,7 @@ export default function HomePage() {
               onChange={(e) => setPhoneNumber(e.target.value)}
             />
             <button type="button" onClick={startSession} disabled={busy}>
-              {t.start}
+              {t.start} {ussdLabel}
             </button>
             <button
               type="button"
@@ -239,8 +337,17 @@ export default function HomePage() {
             </button>
           </form>
           <p className="meta">
-            Session: {sessionId ?? "—"} · {t.hint}
+            {countryName} · Session: {sessionId ?? "—"} · {meta.hint[locale]}
           </p>
+          {tenant && tenant.modules.length > 0 ? (
+            <p className="meta">
+              Modules:{" "}
+              {tenant.modules
+                .filter((m) => m.startsWith("service-pack-"))
+                .map((m) => m.replace("service-pack-", ""))
+                .join(", ") || "—"}
+            </p>
+          ) : null}
         </section>
 
         <section className="panel">
@@ -248,7 +355,7 @@ export default function HomePage() {
           <form className="row" onSubmit={lookupCase}>
             <input
               aria-label={t.tracking}
-              placeholder="TG…"
+              placeholder={`${tenant?.countryCode ?? "TG"}…`}
               value={trackingNumber}
               onChange={(e) => setTrackingNumber(e.target.value)}
             />
@@ -262,8 +369,8 @@ export default function HomePage() {
               <div className="item">
                 <strong>{caseDetails.trackingNumber}</strong>
                 <span className="meta">
-                  {caseDetails.status} · {caseDetails.feeAmount}{" "}
-                  {caseDetails.feeCurrency}
+                  {caseDetails.serviceCode} · {caseDetails.status} ·{" "}
+                  {caseDetails.feeAmount} {caseDetails.feeCurrency}
                 </span>
                 <pre className="meta" style={{ whiteSpace: "pre-wrap" }}>
                   {JSON.stringify(caseDetails.payload, null, 2)}
@@ -287,7 +394,7 @@ export default function HomePage() {
       <section className="panel" style={{ marginTop: "1.25rem" }}>
         <div className="row" style={{ justifyContent: "space-between" }}>
           <h2 style={{ margin: 0 }}>{t.smsTitle}</h2>
-          <button type="button" className="secondary" onClick={refreshSms}>
+          <button type="button" className="secondary" onClick={() => void refreshSms()}>
             {t.refreshSms}
           </button>
         </div>

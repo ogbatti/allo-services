@@ -1,17 +1,16 @@
 {
-  "id": "tg",
-  "countryCode": "TG",
+  "id": "bj",
+  "countryCode": "BJ",
   "name": {
-    "fr": "Togo",
-    "ee": "Togo",
-    "en": "Togo"
+    "fr": "Bénin",
+    "en": "Benin"
   },
   "defaultLocale": "fr",
-  "supportedLocales": ["fr", "ee", "en"],
+  "supportedLocales": ["fr", "en"],
   "currency": "XOF",
-  "ussdShortCode": "*855#",
-  "voiceShortNumber": "855",
-  "smsSenderId": "ALLO-TG",
+  "ussdShortCode": "*711#",
+  "voiceShortNumber": "711",
+  "smsSenderId": "ALLO-BJ",
   "modules": [
     "platform-core",
     "journey-engine",
@@ -23,7 +22,6 @@
     "notifications",
     "partner-backoffice",
     "service-pack-civil-status",
-    "service-pack-appointments",
-    "service-pack-bill-payment"
+    "service-pack-appointments"
   ]
 }
