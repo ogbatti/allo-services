@@ -3,85 +3,99 @@
 **FR** — Guichet numérique universel de services aux citoyens (USSD, voix, SMS, WhatsApp, web, agents).  
 **EN** — Universal citizen service gateway (USSD, voice, SMS, WhatsApp, web, agents).
 
-Open-source · Apache-2.0 · Multi-tenant · Modular · Configurable
+Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
+
+> **Posture** — *Publisher* (bien public numérique) **et** *opérateur* auprès des États : un État adopte la plateforme par **paramétrage**, pas par fork.
 
 ---
 
-## FR — Démarrage rapide
+## Démo publique / Live demo
 
-### Prérequis
+| | URL |
+|---|---|
+| Citoyen / Citizen | https://web-omega-bay-47.vercel.app |
+| Back-office | https://web-omega-bay-47.vercel.app/backoffice |
+| API | https://allo-services-api.fly.dev/api/v1/health |
 
-- Node.js 20+
-- Docker Desktop
+**Comptes instructeur (mot de passe `Demo2026!`)**
 
-### Lancer la démo locale
+| Tenant | E-mail |
+|--------|--------|
+| Togo (`tg`) | `instructeur@lome.tg` |
+| Bénin (`bj`) | `instructeur@cotonou.bj` |
+
+---
+
+## FR — Démo en 5 minutes
+
+### Option A — Déjà en ligne
+
+1. Ouvrir la [démo citoyen](https://web-omega-bay-47.vercel.app).
+2. Choisir le tenant **TG** (pack complet) ou **BJ** (sans factures).
+3. Composer le code USSD affiché → `1` (acte) ou `2` (RDV) ; sur TG aussi `3` (facture).
+4. Noter le **n° de suivi**, ouvrir le [back-office](https://web-omega-bay-47.vercel.app/backoffice), se connecter, instruire le dossier (boutons adaptés au service).
+5. Vérifier le SMS simulé sur la page citoyen.
+
+### Option B — En local
+
+Prérequis : Node.js 20+, Docker Desktop.
 
 ```bash
-# 1. Base de données
 docker compose up -d db
-
-# 2. Dépendances
 npm install
-
-# 3. Schéma + API
 npm run build:shared
 npm run db:generate
 npm run db:push
-npm run dev:api
-
-# 4. Interface (autre terminal)
-npm run dev:web
+npm run dev:api          # http://localhost:3001/api/v1
+# autre terminal
+npm run dev:web          # http://localhost:3000
 ```
 
-PostgreSQL est exposé sur le port hôte **5434** (évite le conflit avec un Postgres local sur 5432).
+PostgreSQL hôte : port **5434**.
 
-Ouvrir [http://localhost:3000](http://localhost:3000) — tenant par défaut **Togo (`tg`)**.
+### Ce qui est paramétrable (sans coder)
 
-Parcours démo USSD : `1` → nom enfant → date `JJ/MM/AAAA` → commune → `1` (confirmer).  
-Résultat : dossier + paiement simulé + SMS dans la boîte de démo.
+| Couche | Où | Exemple |
+|--------|-----|---------|
+| Tenant / pays | `config/tenants/*.json` | codes USSD, locales, devise, `modules[]` |
+| Parcours | `config/journeys/*.json` | étapes, frais, libellés FR/EN/EE |
+| Packs métier | modules `service-pack-*` | état civil, RDV, factures on/off |
+| Instruction | packs partagés | libellés + SMS par `serviceCode` |
+
+**TG** = état civil + RDV + factures · **BJ** = état civil + RDV (factures désactivées), frais acte 300 XOF, USSD `*711#`.
 
 ### Structure
 
 ```
-apps/api          API NestJS (modules métier)
-apps/web          Console démo Next.js
-packages/shared   Types partagés
-config/tenants    Paramètres pays (tg.json)
-config/journeys   Parcours déclaratifs
-docs/             Architecture FR/EN
+apps/api           API NestJS
+apps/web           Démo Next.js (citoyen + back-office)
+packages/shared    Types + packs d'instruction
+config/tenants     Paramètres pays
+config/journeys    Parcours déclaratifs
+docs/              Architecture, déploiement, roadmap
 ```
 
-### Hébergement démo (&lt; 20 USD/mois)
+### Docs
 
-| Composant | Option low-cost |
-|-----------|-----------------|
-| PostgreSQL | [Neon](https://neon.tech) free |
-| API | [Fly.io](https://fly.io) free allowance |
-| Web | [Vercel](https://vercel.com) Hobby free |
-
-**Déploiement guidé (recommandé)** — dans un terminal PowerShell interactif :
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\deploy-demo.ps1
-```
-
-Ou blueprint Render : [Deploy to Render](https://render.com/deploy?repo=https://github.com/ogbatti/allo-services)  
-(après création, coller `DATABASE_URL` Neon + `NEXT_PUBLIC_API_BASE_URL`).
-
-Détails : [docs/deploy.fr.md](docs/deploy.fr.md).
-
-Les données citoyens réelles devront respecter la souveraineté nationale (hébergement pays) — le sandbox produit reste séparé.
+- [Architecture](docs/architecture.fr.md)
+- [Roadmap](docs/roadmap.fr.md)
+- [Déploiement](docs/deploy.fr.md)
 
 ---
 
-## EN — Quick start
+## EN — Demo in 5 minutes
 
-### Prerequisites
+### Option A — Live
 
-- Node.js 20+
-- Docker Desktop
+1. Open the [citizen demo](https://web-omega-bay-47.vercel.app).
+2. Pick tenant **TG** (full pack) or **BJ** (no bills).
+3. Dial the shown USSD code → `1` (birth certificate) or `2` (appointment); on TG also `3` (bill).
+4. Note the **tracking number**, open the [back-office](https://web-omega-bay-47.vercel.app/backoffice), sign in, instruct the case (service-specific actions).
+5. Check the simulated SMS on the citizen page.
 
-### Run the local demo
+### Option B — Local
+
+Requires Node.js 20+, Docker Desktop.
 
 ```bash
 docker compose up -d db
@@ -94,12 +108,24 @@ npm run dev:api
 npm run dev:web
 ```
 
-Postgres is exposed on host port **5434** (avoids clashes with a local Postgres on 5432).
+Postgres host port: **5434**.
 
-Open [http://localhost:3000](http://localhost:3000) — default tenant **Togo (`tg`)**.
+### What you configure (no code)
 
-USSD demo path: `1` → child name → date `DD/MM/YYYY` → commune → `1` (confirm).  
-Result: case + simulated payment + SMS in the demo outbox.
+| Layer | Where | Example |
+|-------|--------|---------|
+| Tenant / country | `config/tenants/*.json` | USSD codes, locales, currency, `modules[]` |
+| Journeys | `config/journeys/*.json` | steps, fees, FR/EN/EE copy |
+| Service packs | `service-pack-*` modules | civil status, appointments, bills on/off |
+| Instruction | shared packs | labels + SMS per `serviceCode` |
+
+**TG** = civil + appointments + bills · **BJ** = civil + appointments (bills off), birth fee 300 XOF, USSD `*711#`.
+
+### Docs
+
+- [Architecture](docs/architecture.en.md)
+- [Roadmap](docs/roadmap.en.md)
+- [Deploy](docs/deploy.en.md)
 
 ### Product posture
 
@@ -107,22 +133,20 @@ Result: case + simulated payment + SMS in the demo outbox.
 - **Operator**: deploy and parameterize per state  
 - Portfolio APIs (Voix d’Afrique, MobiMarché 360, WCA Digital Trust): **stubs / future connectors**
 
-### Demo hosting
+### Demo hosting (&lt; USD 20/month)
+
+Neon (Postgres) + Fly.io (API) + Vercel (web). Guided script:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\deploy-demo.ps1
 ```
 
-See [docs/deploy.en.md](docs/deploy.en.md).
-
-### Docs
-
-- [Architecture FR](docs/architecture.fr.md)
-- [Architecture EN](docs/architecture.en.md)
-- [Deploy FR](docs/deploy.fr.md) / [Deploy EN](docs/deploy.en.md)
-
 ---
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). Prefer changes in `config/` over hard-coding a country.
 
 ## License
 
-Apache License 2.0 — see [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0 — [LICENSE](LICENSE) · [NOTICE](NOTICE).

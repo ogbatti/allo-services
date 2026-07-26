@@ -2,27 +2,97 @@
 
 ## Objectif
 
-Socle open source **multi-tenant**, **modulaire** et **paramétrable**, destiné à être déployé auprès des États. Le MVP démontre un parcours bout-en-bout : **demande d’acte de naissance (Togo) → paiement simulé → SMS simulé**.
+Socle open source **multi-tenant**, **modulaire** et **paramétrable**, destiné à être déployé auprès des États. Un pays adopte la plateforme en ajoutant de la configuration (`config/`), pas en forçant un fork métier.
+
+La démo publique prouve :
+
+1. Parcours citoyens multi-services (USSD simulé)  
+2. Paiement et SMS simulés  
+3. Instruction back-office **adaptée au type de service**  
+4. Deux tenants : **Togo (pack complet)** vs **Bénin (pack réduit)**
+
+## Vue d’ensemble
+
+```mermaid
+flowchart LR
+  subgraph channels [Canaux]
+    USSD[USSD sim]
+    WEB[Web citoyen]
+    BO[Back-office]
+  end
+
+  subgraph api [API NestJS /api/v1]
+    AUTH[Auth instructeur]
+    JOURNEY[Journey engine]
+    CASES[Cases]
+    PAY[Payments sim]
+    SMS[Notifications sim]
+  end
+
+  subgraph config [Config disque]
+    T[tenants/*.json]
+    J[journeys/*.json]
+  end
+
+  subgraph data [PostgreSQL]
+    DB[(Neon / local)]
+  end
+
+  USSD --> JOURNEY
+  WEB --> JOURNEY
+  JOURNEY --> CASES
+  JOURNEY --> PAY
+  CASES --> SMS
+  BO --> AUTH
+  BO --> CASES
+  T --> api
+  J --> JOURNEY
+  api --> DB
+```
 
 ## Modules
 
-| Module | Statut MVP | Rôle |
-|--------|------------|------|
-| `platform-core` / tenants | Oui | Isolation pays, modules activés |
-| `journey-engine` | Oui | Parcours déclaratifs JSON |
-| `case-management` | Oui | Dossiers + statut + suivi |
-| `channels-ussd` | Oui | Simulateur USSD |
-| `payments` | Oui | Connecteur simulateur mobile money |
-| `notifications` | Oui | Outbox SMS simulateur |
-| `channels-web` | Oui | Console démo Next.js |
-| voice / WhatsApp / agents / NLU | Non | Stubs / phases suivantes |
+| Module | Statut | Rôle |
+|--------|--------|------|
+| `platform-core` | Oui | Isolation tenant, sync Prisma |
+| `journey-engine` | Oui | Parcours JSON déclaratifs |
+| `case-management` | Oui | Dossiers, transitions, suivi |
+| `partner-backoffice` | Oui | Instruction + JWT instructeur |
+| `channels-ussd` / `channels-web` / `channels-sms` | Oui | Simulateurs |
+| `payments` / `notifications` | Oui | Connecteurs `simulator` |
+| `service-pack-civil-status` | Oui | Acte de naissance |
+| `service-pack-appointments` | Oui | Prise de RDV |
+| `service-pack-bill-payment` | Oui | Paiement facture (TG) |
+| voice / WhatsApp / agents / NLU | Non | Phases suivantes |
+
+Le menu USSD d’un tenant = **parcours dont le `service-pack-*` est dans `modules`**.
+
+## Tenants de référence
+
+| | Togo `tg` | Bénin `bj` |
+|---|-----------|------------|
+| USSD | `*855#` | `*711#` |
+| Locales | fr, ee, en | fr, en |
+| Packs | civil + RDV + factures | civil + RDV |
+| Frais acte | 500 XOF | 300 XOF |
+
+## Instruction par service
+
+Même moteur de statut (`in_review` → prêt / complément / rejet → remis / clos), mais **libellés d’actions et SMS** selon `serviceCode` :
+
+- `ETC_ACTE_NAISSANCE` — acte prêt / pièce manquante  
+- `RDV_SANTE` — confirmer RDV / autre créneau  
+- `PAY_FACTURE` — valider reçu / correction  
+
+Définition : `packages/shared` (API) + miroir UI web.
 
 ## Principes
 
-1. **API-first** — toute UI passe par `/api/v1`.
-2. **Config over code** — tenants et parcours dans `config/`.
-3. **Connecteurs substituables** — `simulator` aujourd’hui, vrais opérateurs demain.
-4. **Déploiement par modules** — liste `modules` dans le tenant.
+1. **API-first** — toute UI passe par `/api/v1`.  
+2. **Config over code** — tenants et parcours dans `config/`.  
+3. **Connecteurs substituables** — `simulator` aujourd’hui, opérateurs demain.  
+4. **Monolithe modulaire** — pas de microservices au stade MVP.  
+5. **Souveraineté** — données citoyens réelles chez l’État ; sandbox produit séparé.
 
 ## Stack
 
@@ -31,6 +101,10 @@ Socle open source **multi-tenant**, **modulaire** et **paramétrable**, destiné
 - Conteneurs : Docker Compose  
 - Licence : Apache-2.0  
 
-## Hébergement démo (&lt; 20 USD/mois)
+## Hébergement démo
 
-Recommandation : **PostgreSQL Neon (free)** + **API Fly.io (free allowance)** + **Web Vercel/Cloudflare (free)** ≈ 0–10 USD.
+Neon (Postgres) + Fly.io (API) + Vercel (web) — voir [deploy.fr.md](deploy.fr.md).
+
+## Suite
+
+Voir [roadmap.fr.md](roadmap.fr.md).
