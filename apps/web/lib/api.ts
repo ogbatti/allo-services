@@ -230,3 +230,15 @@ export function listNotifications(tenantId = "tg") {
 export function listTenants() {
   return request<TenantSummary[]>("/tenants");
 }
+
+export type ConnectorSelection = {
+  tenantId: string;
+  payment: { id: string; label: string; source: string };
+  sms: { id: string; label: string; source: string };
+};
+
+export function getTenantConnectors(tenantId: string) {
+  return request<ConnectorSelection>(
+    `/connectors/${encodeURIComponent(tenantId)}`,
+  );
+}

@@ -11,13 +11,14 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Instruction & SMS adaptés au `serviceCode`  
 - [x] Tenant TG (complet) vs BJ (modules réduits)  
 - [x] Démo publique (Vercel + Fly + Neon)
+- [x] Connecteurs SMS / Mobile Money (`simulator` + stubs `stub-sms` / `stub-momo`)
 
 ## P1 — Prochaine vague (partenaires)
 
-1. **Connecteurs stub propres** — interfaces SMS / Mobile Money + un faux provider (point d’extension opérateur).  
-2. **Canal agent communautaire** — même parcours, saisie assistée (inclusion / dernier kilomètre).  
-3. **Tableau de bord démo** — volumes dossiers / SMS / par tenant (slide live).  
-4. **Pack pays documenté** — checklist « nouvel État en N jours » (config + secrets + smoke tests).
+1. **Canal agent communautaire** — même parcours, saisie assistée (inclusion / dernier kilomètre).  
+2. **Tableau de bord démo** — volumes dossiers / SMS / par tenant (slide live).  
+3. **Pack pays documenté** — checklist « nouvel État en N jours » (config + secrets + smoke tests).  
+4. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).
 
 ## P2 — Renforcement
 

@@ -25,5 +25,9 @@
     "service-pack-civil-status",
     "service-pack-appointments",
     "service-pack-bill-payment"
-  ]
+  ],
+  "connectors": {
+    "payment": "simulator",
+    "sms": "simulator"
+  }
 }

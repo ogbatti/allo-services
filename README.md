@@ -61,8 +61,12 @@ PostgreSQL hôte : port **5434**.
 | Parcours | `config/journeys/*.json` | étapes, frais, libellés FR/EN/EE |
 | Packs métier | modules `service-pack-*` | état civil, RDV, factures on/off |
 | Instruction | packs partagés | libellés + SMS par `serviceCode` |
+| Connecteurs | `connectors` + `apps/api/src/connectors/` | `simulator` / `stub-momo` / `stub-sms` |
 
-**TG** = état civil + RDV + factures · **BJ** = état civil + RDV (factures désactivées), frais acte 300 XOF, USSD `*711#`.
+**TG** = état civil + RDV + factures · connecteurs `simulator`.  
+**BJ** = état civil + RDV · connecteurs `stub-momo` + `stub-sms` · USSD `*711#`.
+
+Catalogue : `GET /api/v1/connectors`.
 
 ### Structure
 
@@ -118,8 +122,12 @@ Postgres host port: **5434**.
 | Journeys | `config/journeys/*.json` | steps, fees, FR/EN/EE copy |
 | Service packs | `service-pack-*` modules | civil status, appointments, bills on/off |
 | Instruction | shared packs | labels + SMS per `serviceCode` |
+| Connectors | `connectors` + `apps/api/src/connectors/` | `simulator` / `stub-momo` / `stub-sms` |
 
-**TG** = civil + appointments + bills · **BJ** = civil + appointments (bills off), birth fee 300 XOF, USSD `*711#`.
+**TG** = civil + appointments + bills · `simulator` connectors.  
+**BJ** = civil + appointments · `stub-momo` + `stub-sms` · USSD `*711#`.
+
+Catalogue: `GET /api/v1/connectors`.
 
 ### Docs
 

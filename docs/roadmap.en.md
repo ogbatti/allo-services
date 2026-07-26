@@ -11,13 +11,14 @@ Priority: **prove adoption by configuration** and get ready for a state / donor 
 - [x] Instruction & SMS adapted to `serviceCode`  
 - [x] Tenant TG (full) vs BJ (thinner modules)  
 - [x] Public demo (Vercel + Fly + Neon)
+- [x] SMS / Mobile Money connectors (`simulator` + `stub-sms` / `stub-momo` stubs)
 
 ## P1 — Next wave (partners)
 
-1. **Clean connector stubs** — SMS / Mobile Money interfaces + one fake provider (operator extension point).  
-2. **Community agent channel** — same journey, assisted entry (inclusion / last mile).  
-3. **Demo dashboard** — case / SMS volumes per tenant (live slide).  
-4. **Documented country pack** — “new state in N days” checklist (config + secrets + smoke tests).
+1. **Community agent channel** — same journey, assisted entry (inclusion / last mile).  
+2. **Demo dashboard** — case / SMS volumes per tenant (live slide).  
+3. **Documented country pack** — “new state in N days” checklist (config + secrets + smoke tests).  
+4. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).
 
 ## P2 — Hardening
 

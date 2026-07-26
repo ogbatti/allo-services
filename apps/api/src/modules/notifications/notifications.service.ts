@@ -1,4 +1,5 @@
 import { Injectable, Logger } from "@nestjs/common";
+import { ConnectorRegistry } from "../../connectors/connector.registry";
 import { PrismaService } from "../../prisma/prisma.service";
 import { TenantsService } from "../tenants/tenants.service";
 
@@ -16,15 +17,25 @@ export class NotificationsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly tenants: TenantsService,
+    private readonly connectors: ConnectorRegistry,
   ) {}
 
   async sendSms(input: SendSmsInput) {
     const tenant = this.tenants.get(input.tenantId);
+    const connector = this.connectors.smsForTenant(input.tenantId);
+    const result = await connector.send({
+      tenantId: input.tenantId,
+      senderId: tenant.smsSenderId,
+      recipient: input.recipient,
+      body: input.body,
+      caseId: input.caseId,
+    });
 
-    // Simulator provider — replace with real SMS gateway connector later
-    this.logger.log(
-      `[SMS-SIM] to=${input.recipient} sender=${tenant.smsSenderId} body="${input.body}"`,
-    );
+    if (result.status === "failed") {
+      this.logger.warn(
+        `SMS failed via ${connector.id}: ${result.rawMessage ?? "unknown"}`,
+      );
+    }
 
     return this.prisma.notification.create({
       data: {
@@ -34,9 +45,9 @@ export class NotificationsService {
         recipient: input.recipient,
         senderId: tenant.smsSenderId,
         body: input.body,
-        status: "sent",
-        provider: "simulator",
-        costEstimate: 15,
+        status: result.status,
+        provider: result.provider,
+        costEstimate: result.costEstimate ?? null,
       },
     });
   }

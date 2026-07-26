@@ -86,11 +86,29 @@ Same status engine (`in_review` → ready / incomplete / rejected → delivered 
 
 Defined in `packages/shared` (API) with a web UI mirror.
 
+## Connectors (operator extension)
+
+Interfaces live in `apps/api/src/connectors/`:
+
+| Id | Channel | Role |
+|----|---------|------|
+| `simulator` | payment + SMS | Local / TG default demo |
+| `stub-momo` | payment | Fake mobile-money aggregator |
+| `stub-sms` | SMS | Fake SMS gateway |
+
+Selection: `config/tenants/*.json` → `connectors.payment` / `connectors.sms` (wins), else env `PAYMENT_CONNECTOR` / `SMS_CONNECTOR`, else `simulator`.
+
+Runtime catalogue: `GET /api/v1/connectors` · per tenant: `GET /api/v1/connectors/:tenantId`.
+
+To plug a real operator: implement `PaymentConnector` or `SmsConnector`, register it in `ConnectorsModule`, reference the id on the tenant.
+
+**Demo reference** — TG = `simulator` / `simulator` · BJ = `stub-momo` / `stub-sms`.
+
 ## Design principles
 
 1. **API-first** — every UI uses `/api/v1`.  
 2. **Config over code** — tenants and journeys live in `config/`.  
-3. **Swappable connectors** — `simulator` today, real operators tomorrow.  
+3. **Swappable connectors** — same interface for simulator / stub / real SDK.  
 4. **Modular monolith** — no microservices at MVP stage.  
 5. **Sovereignty** — real citizen data stays with the state; product sandbox is separate.
 

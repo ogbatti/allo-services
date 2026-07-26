@@ -86,11 +86,29 @@ Même moteur de statut (`in_review` → prêt / complément / rejet → remis / 
 
 Définition : `packages/shared` (API) + miroir UI web.
 
+## Connecteurs (extension opérateurs)
+
+Interfaces dans `apps/api/src/connectors/` :
+
+| Id | Canal | Rôle |
+|----|--------|------|
+| `simulator` | paiement + SMS | Démo locale / TG par défaut |
+| `stub-momo` | paiement | Faux agrégateur Mobile Money |
+| `stub-sms` | SMS | Fausse passerelle SMS |
+
+Sélection : `config/tenants/*.json` → `connectors.payment` / `connectors.sms` (prioritaire), sinon variables d’environnement `PAYMENT_CONNECTOR` / `SMS_CONNECTOR`, sinon `simulator`.
+
+Catalogue runtime : `GET /api/v1/connectors` · par tenant : `GET /api/v1/connectors/:tenantId`.
+
+Pour brancher un vrai opérateur : implémenter `PaymentConnector` ou `SmsConnector`, l’enregistrer dans `ConnectorsModule`, référencer l’id dans le tenant.
+
+**Référence démo** — TG = `simulator` / `simulator` · BJ = `stub-momo` / `stub-sms`.
+
 ## Principes
 
 1. **API-first** — toute UI passe par `/api/v1`.  
 2. **Config over code** — tenants et parcours dans `config/`.  
-3. **Connecteurs substituables** — `simulator` aujourd’hui, opérateurs demain.  
+3. **Connecteurs substituables** — même interface, simulateur / stub / SDK réel.  
 4. **Monolithe modulaire** — pas de microservices au stade MVP.  
 5. **Souveraineté** — données citoyens réelles chez l’État ; sandbox produit séparé.
 

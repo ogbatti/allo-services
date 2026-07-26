@@ -4,8 +4,10 @@ import Link from "next/link";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   CaseDetails,
+  ConnectorSelection,
   TenantSummary,
   getCase,
+  getTenantConnectors,
   listNotifications,
   listTenants,
   ussdStep,
@@ -100,6 +102,7 @@ export default function HomePage() {
   const t = copy[locale];
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [tenantId, setTenantId] = useState("tg");
+  const [connectors, setConnectors] = useState<ConnectorSelection | null>(null);
 
   const tenant = tenants.find((x) => x.id === tenantId);
   const meta = TENANT_META[tenantId] ?? TENANT_META.tg;
@@ -143,7 +146,11 @@ export default function HomePage() {
     setCaseDetails(null);
     setTrackingNumber("");
     setSms([]);
+    setConnectors(null);
     if (!locales.includes(locale)) setLocale("fr");
+    getTenantConnectors(tenantId)
+      .then(setConnectors)
+      .catch(() => setConnectors(null));
   }, [tenantId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const canSend = useMemo(
@@ -346,6 +353,12 @@ export default function HomePage() {
                 .filter((m) => m.startsWith("service-pack-"))
                 .map((m) => m.replace("service-pack-", ""))
                 .join(", ") || "—"}
+            </p>
+          ) : null}
+          {connectors ? (
+            <p className="meta">
+              Connecteurs: paiement={connectors.payment.id} · SMS=
+              {connectors.sms.id}
             </p>
           ) : null}
         </section>

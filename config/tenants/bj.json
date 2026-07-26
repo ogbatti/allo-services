@@ -23,5 +23,9 @@
     "partner-backoffice",
     "service-pack-civil-status",
     "service-pack-appointments"
-  ]
+  ],
+  "connectors": {
+    "payment": "stub-momo",
+    "sms": "stub-sms"
+  }
 }

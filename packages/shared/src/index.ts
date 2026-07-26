@@ -73,6 +73,14 @@ export interface JourneyDefinition {
   startStepId: string;
 }
 
+/** Optional per-tenant connector selection (extension point for operators). */
+export interface TenantConnectors {
+  /** Payment connector id, e.g. simulator | stub-momo */
+  payment?: string;
+  /** SMS connector id, e.g. simulator | stub-sms */
+  sms?: string;
+}
+
 export interface TenantConfig {
   id: string;
   countryCode: string;
@@ -84,6 +92,7 @@ export interface TenantConfig {
   voiceShortNumber: string;
   smsSenderId: string;
   modules: string[];
+  connectors?: TenantConnectors;
 }
 
 export interface CaseSummary {

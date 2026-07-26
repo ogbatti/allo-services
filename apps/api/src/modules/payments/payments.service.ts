@@ -4,6 +4,7 @@ import {
   Logger,
 } from "@nestjs/common";
 import { createHash } from "node:crypto";
+import { ConnectorRegistry } from "../../connectors/connector.registry";
 import { PrismaService } from "../../prisma/prisma.service";
 import { CasesService } from "../cases/cases.service";
 import { NotificationsService } from "../notifications/notifications.service";
@@ -17,6 +18,7 @@ export class PaymentsService {
     private readonly prisma: PrismaService,
     private readonly cases: CasesService,
     private readonly notifications: NotificationsService,
+    private readonly connectors: ConnectorRegistry,
   ) {}
 
   async payByTrackingNumber(trackingNumber: string, dto: PayCaseDto) {
@@ -42,21 +44,49 @@ export class PaymentsService {
       return existing;
     }
 
-    // Simulator — always succeeds for demo; swap with MM connector later
-    const externalRef = `SIM-${Date.now()}`;
-    this.logger.log(
-      `[PAY-SIM] case=${summary.trackingNumber} amount=${summary.feeAmount} ${summary.feeCurrency} phone=${dto.phoneNumber}`,
-    );
+    const connector = this.connectors.paymentForTenant(summary.tenantId);
+    const charge = await connector.charge({
+      tenantId: summary.tenantId,
+      caseId: summary.id,
+      trackingNumber: summary.trackingNumber,
+      amount: summary.feeAmount,
+      currency: summary.feeCurrency,
+      phoneNumber: dto.phoneNumber,
+      idempotencyKey,
+    });
+
+    if (charge.status !== "succeeded") {
+      this.logger.warn(
+        `Payment failed via ${connector.id}: ${charge.rawMessage ?? charge.status}`,
+      );
+      await this.prisma.payment.create({
+        data: {
+          tenantId: summary.tenantId,
+          caseId: summary.id,
+          provider: charge.provider,
+          amount: summary.feeAmount,
+          currency: summary.feeCurrency,
+          status: "failed",
+          externalRef: charge.externalRef,
+          phoneNumber: dto.phoneNumber,
+          idempotencyKey: `${idempotencyKey}:failed:${Date.now()}`,
+        },
+      });
+      throw new BadRequestException({
+        fr: `Paiement refusé (${connector.id})`,
+        en: `Payment declined (${connector.id})`,
+      });
+    }
 
     const payment = await this.prisma.payment.create({
       data: {
         tenantId: summary.tenantId,
         caseId: summary.id,
-        provider: "simulator",
+        provider: charge.provider,
         amount: summary.feeAmount,
         currency: summary.feeCurrency,
         status: "succeeded",
-        externalRef,
+        externalRef: charge.externalRef,
         phoneNumber: dto.phoneNumber,
         idempotencyKey,
       },
@@ -65,8 +95,8 @@ export class PaymentsService {
     await this.cases.transition(
       summary.id,
       "in_review",
-      "payment-simulator",
-      `Payment ${externalRef} succeeded`,
+      `payment-${charge.provider}`,
+      `Payment ${charge.externalRef} succeeded via ${charge.provider}`,
     );
 
     const locale = summary.locale;
