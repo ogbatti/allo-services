@@ -1,5 +1,19 @@
-const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3001/api/v1";
+const FLY_API = "https://allo-services-api.fly.dev/api/v1";
+
+/** Prefer Fly for hosted demos; localhost only for local Next.js. */
+function resolveApiBase(): string {
+  const fromEnv = process.env.NEXT_PUBLIC_API_BASE_URL;
+  if (typeof window !== "undefined") {
+    const host = window.location.hostname;
+    if (host.endsWith(".vercel.app") || host === "allo-services.vercel.app") {
+      return FLY_API;
+    }
+    if (host === "localhost" || host === "127.0.0.1") {
+      return fromEnv ?? "http://localhost:3001/api/v1";
+    }
+  }
+  return fromEnv ?? FLY_API;
+}
 
 const TOKEN_KEY = "allo_instructor_token";
 
@@ -14,6 +28,28 @@ export function setToken(token: string | null) {
   else window.localStorage.removeItem(TOKEN_KEY);
 }
 
+function formatApiError(status: number, body: string): string {
+  try {
+    const parsed = JSON.parse(body) as {
+      message?: string | string[] | { fr?: string; en?: string };
+      error?: string;
+    };
+    const msg = parsed.message;
+    if (typeof msg === "object" && msg && "fr" in msg && msg.fr) return msg.fr;
+    if (Array.isArray(msg)) return msg.join(", ");
+    if (typeof msg === "string") {
+      if (status === 404 && msg.includes("/auth/login")) {
+        return "API indisponible ou ancienne version (auth). Rechargez après déploiement.";
+      }
+      return msg;
+    }
+    if (parsed.error) return `${parsed.error} (${status})`;
+  } catch {
+    /* raw body */
+  }
+  return body || `HTTP ${status}`;
+}
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
@@ -22,14 +58,14 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const res = await fetch(`${API_BASE}${path}`, {
+  const res = await fetch(`${resolveApiBase()}${path}`, {
     ...init,
     headers,
     cache: "no-store",
   });
   if (!res.ok) {
     const body = await res.text();
-    throw new Error(body || `HTTP ${res.status}`);
+    throw new Error(formatApiError(res.status, body));
   }
   return res.json() as Promise<T>;
 }
