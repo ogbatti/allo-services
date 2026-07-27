@@ -84,6 +84,7 @@ docs/              Architecture, déploiement, roadmap
 ### Docs
 
 - [Architecture](docs/architecture.fr.md)
+- [Pack pays](docs/country-pack.fr.md)
 - [Roadmap](docs/roadmap.fr.md)
 - [Déploiement](docs/deploy.fr.md)
 
@@ -134,6 +135,7 @@ Catalogue: `GET /api/v1/connectors`.
 ### Docs
 
 - [Architecture](docs/architecture.en.md)
+- [Country pack](docs/country-pack.en.md)
 - [Roadmap](docs/roadmap.en.md)
 - [Deploy](docs/deploy.en.md)
 

@@ -36,7 +36,9 @@ export class TenantsService implements OnModuleInit {
 
   private async loadFromDiskAndSync() {
     const dir = join(resolveConfigDir(), "tenants");
-    const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(dir).filter(
+      (f) => f.endsWith(".json") && !f.startsWith("_"),
+    );
 
     for (const file of files) {
       const raw = readFileSync(join(dir, file), "utf8");

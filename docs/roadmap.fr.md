@@ -14,12 +14,13 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Connecteurs SMS / Mobile Money (`simulator` + stubs `stub-sms` / `stub-momo`)
 - [x] Canal agent communautaire (mêmes parcours, `channel=agent`)
 - [x] Tableau de bord démo (`GET /stats/demo`)
+- [x] Pack pays documenté (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
 
 ## P1 — Prochaine vague (partenaires)
 
-1. **Pack pays documenté** — checklist « nouvel État en N jours » (config + secrets + smoke tests).  
-2. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
-3. **Rôles back-office** — instructeur / superviseur / admin tenant.
+1. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
+2. **Rôles back-office** — instructeur / superviseur / admin tenant.  
+3. **Journal d’audit exportable**
 
 ## P2 — Renforcement
 

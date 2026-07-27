@@ -3,45 +3,40 @@ import {
   OnModuleInit,
   UnauthorizedException,
 } from "@nestjs/common";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { join } from "node:path";
+import { resolveConfigDir } from "../../common/paths";
 import { PrismaService } from "../../prisma/prisma.service";
 import { hashPassword, verifyPassword } from "./password";
 import { signToken, verifyToken } from "./token";
 
-const DEMO_INSTRUCTORS = [
-  {
-    tenantId: "tg",
-    email: "instructeur@lome.tg",
-    name: "Agent Commune Lomé",
-    password: "Demo2026!",
-    role: "instructor",
-  },
-  {
-    tenantId: "bj",
-    email: "instructeur@cotonou.bj",
-    name: "Agent Mairie Cotonou",
-    password: "Demo2026!",
-    role: "instructor",
-  },
-];
+type SeedInstructor = {
+  tenantId: string;
+  email: string;
+  name: string;
+  password: string;
+  role?: string;
+};
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   constructor(private readonly prisma: PrismaService) {}
 
   async onModuleInit() {
-    for (const demo of DEMO_INSTRUCTORS) {
+    for (const demo of this.loadSeedInstructors()) {
+      const email = demo.email.trim().toLowerCase();
       const existing = await this.prisma.instructor.findUnique({
         where: {
-          tenantId_email: { tenantId: demo.tenantId, email: demo.email },
+          tenantId_email: { tenantId: demo.tenantId, email },
         },
       });
       if (!existing) {
         await this.prisma.instructor.create({
           data: {
             tenantId: demo.tenantId,
-            email: demo.email,
+            email,
             name: demo.name,
-            role: demo.role,
+            role: demo.role ?? "instructor",
             passwordHash: hashPassword(demo.password),
             active: true,
           },
@@ -119,5 +114,21 @@ export class AuthService implements OnModuleInit {
       });
     }
     return payload;
+  }
+
+  private loadSeedInstructors(): SeedInstructor[] {
+    const dir = join(resolveConfigDir(), "instructors");
+    if (!existsSync(dir)) return [];
+    const files = readdirSync(dir).filter(
+      (f) => f.endsWith(".json") && !f.startsWith("_"),
+    );
+    const all: SeedInstructor[] = [];
+    for (const file of files) {
+      const raw = readFileSync(join(dir, file), "utf8");
+      const parsed = JSON.parse(raw) as SeedInstructor[] | SeedInstructor;
+      if (Array.isArray(parsed)) all.push(...parsed);
+      else all.push(parsed);
+    }
+    return all;
   }
 }

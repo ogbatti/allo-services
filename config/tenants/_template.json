@@ -1,0 +1,31 @@
+{
+  "id": "xx",
+  "countryCode": "XX",
+  "name": {
+    "fr": "Nom du pays",
+    "en": "Country name"
+  },
+  "defaultLocale": "fr",
+  "supportedLocales": ["fr", "en"],
+  "currency": "XOF",
+  "ussdShortCode": "*000#",
+  "voiceShortNumber": "000",
+  "smsSenderId": "ALLO-XX",
+  "modules": [
+    "platform-core",
+    "journey-engine",
+    "case-management",
+    "channels-ussd",
+    "channels-sms",
+    "channels-web",
+    "channels-agent",
+    "payments",
+    "notifications",
+    "partner-backoffice",
+    "service-pack-civil-status"
+  ],
+  "connectors": {
+    "payment": "simulator",
+    "sms": "simulator"
+  }
+}

@@ -6,12 +6,14 @@ import {
   CaseDetails,
   CaseSummary,
   Instructor,
+  TenantSummary,
   allowedTransitionsFor,
   getCase,
   getToken,
   instructCase,
   listCases,
   listInbox,
+  listTenants,
   loginInstructor,
   meInstructor,
   setToken,
@@ -25,19 +27,17 @@ import {
 
 type Filter = "inbox" | "all" | "ready" | "rejected";
 
-const TENANT_CREDENTIALS: Record<
-  string,
-  { email: string; label: string }
-> = {
-  tg: { email: "instructeur@lome.tg", label: "Togo (TG)" },
-  bj: { email: "instructeur@cotonou.bj", label: "Bénin (BJ)" },
+const FALLBACK_EMAILS: Record<string, string> = {
+  tg: "instructeur@lome.tg",
+  bj: "instructeur@cotonou.bj",
 };
 
 export default function BackofficePage() {
   const [authReady, setAuthReady] = useState(false);
   const [instructor, setInstructor] = useState<Instructor | null>(null);
+  const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [tenantId, setTenantId] = useState("tg");
-  const [email, setEmail] = useState(TENANT_CREDENTIALS.tg.email);
+  const [email, setEmail] = useState(FALLBACK_EMAILS.tg);
   const [password, setPassword] = useState("Demo2026!");
   const [filter, setFilter] = useState<Filter>("inbox");
   const [serviceCode, setServiceCode] = useState("");
@@ -54,11 +54,24 @@ export default function BackofficePage() {
   );
 
   const serviceFilterOptions = useMemo(() => {
-    if (tenantId === "bj") {
-      return SERVICE_OPTIONS.filter((s) => s.code !== "PAY_FACTURE");
-    }
-    return SERVICE_OPTIONS;
-  }, [tenantId]);
+    const tenant = tenants.find((t) => t.id === (instructor?.tenantId ?? tenantId));
+    const modules = tenant?.modules ?? [];
+    return SERVICE_OPTIONS.filter((s) => {
+      if (s.code === "PAY_FACTURE") {
+        return modules.length === 0 || modules.includes("service-pack-bill-payment");
+      }
+      if (s.code === "RDV_SANTE") {
+        return modules.length === 0 || modules.includes("service-pack-appointments");
+      }
+      return true;
+    });
+  }, [tenantId, tenants, instructor]);
+
+  useEffect(() => {
+    listTenants()
+      .then((rows) => setTenants(rows.sort((a, b) => a.id.localeCompare(b.id))))
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const token = getToken();
@@ -105,8 +118,7 @@ export default function BackofficePage() {
 
   function onTenantPick(id: string) {
     setTenantId(id);
-    const cred = TENANT_CREDENTIALS[id];
-    if (cred) setEmail(cred.email);
+    setEmail(FALLBACK_EMAILS[id] ?? `instructeur@${id}.demo`);
   }
 
   async function onLogin(e: FormEvent) {
@@ -208,9 +220,15 @@ export default function BackofficePage() {
             onChange={(e) => onTenantPick(e.target.value)}
             style={{ width: "100%", margin: "0.4rem 0 0.85rem" }}
           >
-            {Object.entries(TENANT_CREDENTIALS).map(([id, cred]) => (
-              <option key={id} value={id}>
-                {cred.label}
+            {(tenants.length
+              ? tenants
+              : [
+                  { id: "tg", name: { fr: "Togo" } },
+                  { id: "bj", name: { fr: "Bénin" } },
+                ]
+            ).map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.id.toUpperCase()} — {t.name.fr}
               </option>
             ))}
           </select>
@@ -243,7 +261,8 @@ export default function BackofficePage() {
             Se connecter
           </button>
           <p className="meta" style={{ marginTop: "0.85rem" }}>
-            TG: instructeur@lome.tg · BJ: instructeur@cotonou.bj · Demo2026!
+            Démo : instructeur@lome.tg ou instructeur@cotonou.bj · Demo2026!
+            (nouveaux pays : voir config/instructors)
           </p>
         </form>
       </main>

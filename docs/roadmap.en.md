@@ -14,12 +14,13 @@ Priority: **prove adoption by configuration** and get ready for a state / donor 
 - [x] SMS / Mobile Money connectors (`simulator` + `stub-sms` / `stub-momo` stubs)
 - [x] Community agent channel (same journeys, `channel=agent`)
 - [x] Demo dashboard (`GET /stats/demo`)
+- [x] Documented country pack (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
 
 ## P1 — Next wave (partners)
 
-1. **Documented country pack** — “new state in N days” checklist (config + secrets + smoke tests).  
-2. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).  
-3. **Back-office roles** — instructor / supervisor / tenant admin.
+1. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).  
+2. **Back-office roles** — instructor / supervisor / tenant admin.  
+3. **Exportable audit trail**
 
 ## P2 — Hardening
 

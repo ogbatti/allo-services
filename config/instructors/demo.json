@@ -1,0 +1,16 @@
+[
+  {
+    "tenantId": "tg",
+    "email": "instructeur@lome.tg",
+    "name": "Agent Commune Lomé",
+    "password": "Demo2026!",
+    "role": "instructor"
+  },
+  {
+    "tenantId": "bj",
+    "email": "instructeur@cotonou.bj",
+    "name": "Agent Mairie Cotonou",
+    "password": "Demo2026!",
+    "role": "instructor"
+  }
+]

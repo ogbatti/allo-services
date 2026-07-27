@@ -1,0 +1,93 @@
+{
+  "id": "civil-status-birth-certificate-xx",
+  "version": "1.0.0",
+  "tenantId": "xx",
+  "serviceCode": "ETC_ACTE_NAISSANCE",
+  "title": {
+    "fr": "Demande d'acte de naissance",
+    "en": "Birth certificate request"
+  },
+  "feeAmount": 500,
+  "feeCurrency": "XOF",
+  "startStepId": "input_child_name",
+  "steps": [
+    {
+      "id": "input_child_name",
+      "type": "input",
+      "prompt": {
+        "fr": "Nom complet de l'enfant ?",
+        "en": "Child's full name?"
+      },
+      "field": "childFullName",
+      "validation": { "minLength": 2, "maxLength": 80 },
+      "next": "input_birth_date"
+    },
+    {
+      "id": "input_birth_date",
+      "type": "input",
+      "prompt": {
+        "fr": "Date de naissance (JJ/MM/AAAA) ?",
+        "en": "Date of birth (DD/MM/YYYY)?"
+      },
+      "field": "birthDate",
+      "validation": { "pattern": "^\\d{2}/\\d{2}/\\d{4}$" },
+      "next": "input_commune"
+    },
+    {
+      "id": "input_commune",
+      "type": "input",
+      "prompt": {
+        "fr": "Commune d'enregistrement ?",
+        "en": "Registration commune?"
+      },
+      "field": "commune",
+      "validation": { "minLength": 2, "maxLength": 60 },
+      "next": "confirm_summary"
+    },
+    {
+      "id": "confirm_summary",
+      "type": "confirm",
+      "prompt": {
+        "fr": "Confirmer la demande ?\n1. Oui\n2. Non",
+        "en": "Confirm request?\n1. Yes\n2. No"
+      },
+      "options": [
+        { "key": "1", "label": { "fr": "Oui", "en": "Yes" }, "next": "payment" },
+        { "key": "2", "label": { "fr": "Non", "en": "No" }, "next": "end_cancelled" }
+      ]
+    },
+    {
+      "id": "payment",
+      "type": "payment",
+      "prompt": {
+        "fr": "Paiement en cours…",
+        "en": "Payment in progress…"
+      },
+      "next": "end_success"
+    },
+    {
+      "id": "end_success",
+      "type": "end",
+      "prompt": {
+        "fr": "Demande enregistrée. Suivi: {{trackingNumber}}.",
+        "en": "Request registered. Tracking: {{trackingNumber}}."
+      }
+    },
+    {
+      "id": "end_cancelled",
+      "type": "end",
+      "prompt": {
+        "fr": "Demande annulée.",
+        "en": "Request cancelled."
+      }
+    },
+    {
+      "id": "end_agent",
+      "type": "end",
+      "prompt": {
+        "fr": "Un agent vous rappellera sous peu.",
+        "en": "An agent will call you shortly."
+      }
+    }
+  ]
+}

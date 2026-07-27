@@ -54,7 +54,9 @@ export class JourneysService implements OnModuleInit {
 
   private loadFromDisk() {
     const dir = join(resolveConfigDir(), "journeys");
-    const files = readdirSync(dir).filter((f) => f.endsWith(".json"));
+    const files = readdirSync(dir).filter(
+      (f) => f.endsWith(".json") && !f.startsWith("_"),
+    );
     for (const file of files) {
       const raw = readFileSync(join(dir, file), "utf8");
       const journey = JSON.parse(raw) as JourneyDefinition;
