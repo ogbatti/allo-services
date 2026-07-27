@@ -12,13 +12,14 @@ Priority: **prove adoption by configuration** and get ready for a state / donor 
 - [x] Tenant TG (full) vs BJ (thinner modules)  
 - [x] Public demo (Vercel + Fly + Neon)
 - [x] SMS / Mobile Money connectors (`simulator` + `stub-sms` / `stub-momo` stubs)
+- [x] Community agent channel (same journeys, `channel=agent`)
+- [x] Demo dashboard (`GET /stats/demo`)
 
 ## P1 — Next wave (partners)
 
-1. **Community agent channel** — same journey, assisted entry (inclusion / last mile).  
-2. **Demo dashboard** — case / SMS volumes per tenant (live slide).  
-3. **Documented country pack** — “new state in N days” checklist (config + secrets + smoke tests).  
-4. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).
+1. **Documented country pack** — “new state in N days” checklist (config + secrets + smoke tests).  
+2. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).  
+3. **Back-office roles** — instructor / supervisor / tenant admin.
 
 ## P2 — Hardening
 

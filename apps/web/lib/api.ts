@@ -242,3 +242,40 @@ export function getTenantConnectors(tenantId: string) {
     `/connectors/${encodeURIComponent(tenantId)}`,
   );
 }
+
+export type ChannelResponse = UssdResponse & { channel?: string };
+
+export function agentStep(body: {
+  tenantId: string;
+  phoneNumber: string;
+  sessionId?: string;
+  input?: string;
+  locale?: string;
+  agentName?: string;
+}) {
+  return request<ChannelResponse>("/channels/agent", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export type DemoStats = {
+  generatedAt: string;
+  totals: { cases: number; sms: number; paymentsSucceeded: number };
+  tenants: Array<{
+    tenantId: string;
+    countryCode: string;
+    name: { fr: string; en?: string; ee?: string };
+    casesTotal: number;
+    smsTotal: number;
+    paymentsSucceeded: number;
+    byStatus: Record<string, number>;
+    byService: Array<{ serviceCode: string; label: string; count: number }>;
+    byChannel: Record<string, number>;
+  }>;
+};
+
+export function getDemoStats(tenantId?: string) {
+  const q = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : "";
+  return request<DemoStats>(`/stats/demo${q}`);
+}

@@ -14,6 +14,8 @@ Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
 | | URL |
 |---|---|
 | Citoyen / Citizen | https://web-omega-bay-47.vercel.app |
+| Agent communautaire | https://web-omega-bay-47.vercel.app/agent |
+| Tableau de bord | https://web-omega-bay-47.vercel.app/dashboard |
 | Back-office | https://web-omega-bay-47.vercel.app/backoffice |
 | API | https://allo-services-api.fly.dev/api/v1/health |
 

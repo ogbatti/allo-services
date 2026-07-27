@@ -257,7 +257,11 @@ export default function HomePage() {
         {locale === "en" ? meta.ledeExtra.en : meta.ledeExtra.fr}
       </p>
       <p className="meta" style={{ marginTop: "-1rem", marginBottom: "1.25rem" }}>
-        <Link href="/backoffice">Back-office instructeur →</Link>
+        <Link href="/backoffice">Back-office</Link>
+        {" · "}
+        <Link href="/agent">Agent communautaire</Link>
+        {" · "}
+        <Link href="/dashboard">Tableau de bord</Link>
       </p>
 
       <div className="row" style={{ marginBottom: "1rem" }}>

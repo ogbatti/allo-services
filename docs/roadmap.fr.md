@@ -12,13 +12,14 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Tenant TG (complet) vs BJ (modules réduits)  
 - [x] Démo publique (Vercel + Fly + Neon)
 - [x] Connecteurs SMS / Mobile Money (`simulator` + stubs `stub-sms` / `stub-momo`)
+- [x] Canal agent communautaire (mêmes parcours, `channel=agent`)
+- [x] Tableau de bord démo (`GET /stats/demo`)
 
 ## P1 — Prochaine vague (partenaires)
 
-1. **Canal agent communautaire** — même parcours, saisie assistée (inclusion / dernier kilomètre).  
-2. **Tableau de bord démo** — volumes dossiers / SMS / par tenant (slide live).  
-3. **Pack pays documenté** — checklist « nouvel État en N jours » (config + secrets + smoke tests).  
-4. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).
+1. **Pack pays documenté** — checklist « nouvel État en N jours » (config + secrets + smoke tests).  
+2. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
+3. **Rôles back-office** — instructeur / superviseur / admin tenant.
 
 ## P2 — Renforcement
 

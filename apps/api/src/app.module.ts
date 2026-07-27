@@ -7,6 +7,7 @@ import { HealthModule } from "./modules/health/health.module";
 import { JourneysModule } from "./modules/journeys/journeys.module";
 import { NotificationsModule } from "./modules/notifications/notifications.module";
 import { PaymentsModule } from "./modules/payments/payments.module";
+import { StatsModule } from "./modules/stats/stats.module";
 import { TenantsModule } from "./modules/tenants/tenants.module";
 import { PrismaModule } from "./prisma/prisma.module";
 
@@ -22,6 +23,7 @@ import { PrismaModule } from "./prisma/prisma.module";
     PaymentsModule,
     NotificationsModule,
     ChannelsModule,
+    StatsModule,
   ],
 })
 export class AppModule {}

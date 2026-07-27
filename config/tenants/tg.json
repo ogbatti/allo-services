@@ -19,6 +19,7 @@
     "channels-ussd",
     "channels-sms",
     "channels-web",
+    "channels-agent",
     "payments",
     "notifications",
     "partner-backoffice",

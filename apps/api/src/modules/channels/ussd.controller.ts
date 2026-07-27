@@ -8,6 +8,6 @@ export class UssdController {
 
   @Post()
   handle(@Body() dto: UssdRequestDto) {
-    return this.ussd.handle(dto);
+    return this.ussd.handle({ ...dto, channel: "ussd" });
   }
 }

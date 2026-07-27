@@ -269,6 +269,12 @@ export default function BackofficePage() {
         <Link href="/" className="meta">
           ← Démo citoyen
         </Link>
+        <Link href="/agent" className="meta">
+          Agent
+        </Link>
+        <Link href="/dashboard" className="meta">
+          Dashboard
+        </Link>
         <span className="meta">
           {instructor.name} · {instructor.email}
         </span>

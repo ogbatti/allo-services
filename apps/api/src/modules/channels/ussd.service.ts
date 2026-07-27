@@ -17,7 +17,7 @@ import { CasesService } from "../cases/cases.service";
 import { JourneysService } from "../journeys/journeys.service";
 import { PaymentsService } from "../payments/payments.service";
 import { TenantsService } from "../tenants/tenants.service";
-import { UssdRequestDto } from "./dto";
+import { ChannelSessionDto } from "./dto";
 
 const HOME_STEP = "__home__";
 const SESSION_TTL_MS = 72 * 60 * 60 * 1000;
@@ -32,9 +32,10 @@ export class UssdService {
     private readonly payments: PaymentsService,
   ) {}
 
-  async handle(dto: UssdRequestDto) {
+  async handle(dto: ChannelSessionDto) {
     const tenant = this.tenants.get(dto.tenantId);
     const locale = (dto.locale ?? tenant.defaultLocale) as LocaleCode;
+    const channel = dto.channel === "agent" ? "agent" : "ussd";
 
     let session = dto.sessionId
       ? await this.prisma.channelSession.findUnique({
@@ -43,15 +44,20 @@ export class UssdService {
       : null;
 
     if (!session || session.expiresAt < new Date()) {
+      const initialAnswers: Record<string, string> = {};
+      if (channel === "agent" && dto.agentName?.trim()) {
+        initialAnswers.agentName = dto.agentName.trim();
+      }
+
       session = await this.prisma.channelSession.create({
         data: {
           tenantId: tenant.id,
-          channel: "ussd",
+          channel,
           phoneNumber: dto.phoneNumber,
           locale,
           journeyId: null,
           currentStepId: HOME_STEP,
-          answersJson: "{}",
+          answersJson: JSON.stringify(initialAnswers),
           expiresAt: new Date(Date.now() + SESSION_TTL_MS),
         },
       });
@@ -59,13 +65,19 @@ export class UssdService {
       return {
         sessionId: session.id,
         continue: true,
-        message: this.homePrompt(tenant, locale),
+        message: this.homePrompt(tenant, locale, channel),
         stepId: HOME_STEP,
+        channel,
       };
     }
 
     const answers = JSON.parse(session.answersJson) as Record<string, string>;
+    if (channel === "agent" && dto.agentName?.trim() && !answers.agentName) {
+      answers.agentName = dto.agentName.trim();
+    }
     const input = (dto.input ?? "").trim();
+    const sessionChannel =
+      session.channel === "agent" ? "agent" : ("ussd" as const);
 
     if (!session.journeyId || session.currentStepId === HOME_STEP) {
       return this.handleHome({
@@ -75,6 +87,7 @@ export class UssdService {
         locale,
         phoneNumber: dto.phoneNumber,
         tenant,
+        channel: sessionChannel,
       });
     }
 
@@ -92,6 +105,7 @@ export class UssdService {
       locale,
       phoneNumber: dto.phoneNumber,
       tenantId: tenant.id,
+      channel: sessionChannel,
     });
 
     await this.prisma.channelSession.update({
@@ -111,6 +125,7 @@ export class UssdService {
       message: next.message,
       stepId: next.stepId,
       trackingNumber: next.trackingNumber,
+      channel: sessionChannel,
     };
   }
 
@@ -140,17 +155,36 @@ export class UssdService {
     }));
   }
 
-  private homePrompt(tenant: TenantConfig, locale: LocaleCode): string {
+  private homePrompt(
+    tenant: TenantConfig,
+    locale: LocaleCode,
+    channel: "ussd" | "agent" = "ussd",
+  ): string {
     const country = pickLocale(tenant.name, locale);
-    const lines = [`Allô Services ${country}`];
+    const mode =
+      channel === "agent"
+        ? locale === "en"
+          ? " — Agent desk"
+          : " — Guichet agent"
+        : "";
+    const lines = [`Allô Services ${country}${mode}`];
     for (const entry of this.catalogForTenant(tenant)) {
       const pack = getServicePack(entry.serviceCode);
       const label =
-        packLabel(pack, locale) ||
-        pickLocale(entry.title, locale);
+        packLabel(pack, locale) || pickLocale(entry.title, locale);
       lines.push(`${entry.key}. ${label}`);
     }
-    lines.push(locale === "en" ? "0. Agent" : locale === "ee" ? "0. Ame" : "0. Agent");
+    lines.push(
+      locale === "en"
+        ? channel === "agent"
+          ? "0. End"
+          : "0. Agent"
+        : locale === "ee"
+          ? "0. Ame"
+          : channel === "agent"
+            ? "0. Terminer"
+            : "0. Agent",
+    );
     return lines.join("\n");
   }
 
@@ -161,16 +195,18 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenant: TenantConfig;
+    channel: "ussd" | "agent";
   }) {
-    const { sessionId, input, answers, locale, tenant } = params;
+    const { sessionId, input, answers, locale, tenant, channel } = params;
     const catalog = this.catalogForTenant(tenant);
 
     if (!input) {
       return {
         sessionId,
         continue: true,
-        message: this.homePrompt(tenant, locale),
+        message: this.homePrompt(tenant, locale, channel),
         stepId: HOME_STEP,
+        channel,
       };
     }
 
@@ -179,6 +215,7 @@ export class UssdService {
         where: { id: sessionId },
         data: {
           currentStepId: "end_agent",
+          answersJson: JSON.stringify(answers),
           expiresAt: new Date(Date.now() + SESSION_TTL_MS),
         },
       });
@@ -186,10 +223,15 @@ export class UssdService {
         sessionId,
         continue: false,
         message:
-          locale === "en"
-            ? "An agent will call you shortly."
-            : "Un agent vous rappellera sous peu.",
+          channel === "agent"
+            ? locale === "en"
+              ? "Session closed."
+              : "Session terminée."
+            : locale === "en"
+              ? "An agent will call you shortly."
+              : "Un agent vous rappellera sous peu.",
         stepId: "end_agent",
+        channel,
       };
     }
 
@@ -200,8 +242,9 @@ export class UssdService {
         continue: true,
         message:
           (locale === "en" ? "Invalid choice.\n" : "Choix invalide.\n") +
-          this.homePrompt(tenant, locale),
+          this.homePrompt(tenant, locale, channel),
         stepId: HOME_STEP,
+        channel,
       };
     }
 
@@ -224,6 +267,7 @@ export class UssdService {
       continue: true,
       message: this.journeys.renderPrompt(start, locale),
       stepId: start.id,
+      channel,
     };
   }
 
@@ -235,6 +279,7 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenantId: string;
+    channel: "ussd" | "agent";
   }): Promise<{
     stepId: string;
     answers: Record<string, string>;
@@ -243,8 +288,16 @@ export class UssdService {
     caseId?: string;
     trackingNumber?: string;
   }> {
-    const { journey, step, input, answers, locale, phoneNumber, tenantId } =
-      params;
+    const {
+      journey,
+      step,
+      input,
+      answers,
+      locale,
+      phoneNumber,
+      tenantId,
+      channel,
+    } = params;
 
     if (step.type === "menu" || step.type === "confirm") {
       const option = step.options?.find((o) => o.key === input);
@@ -273,6 +326,7 @@ export class UssdService {
         locale,
         phoneNumber,
         tenantId,
+        channel,
       });
     }
 
@@ -296,6 +350,7 @@ export class UssdService {
         locale,
         phoneNumber,
         tenantId,
+        channel,
       });
     }
 
@@ -325,6 +380,7 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenantId: string;
+    channel: "ussd" | "agent";
   }): Promise<{
     stepId: string;
     answers: Record<string, string>;
@@ -341,7 +397,7 @@ export class UssdService {
         journeyId: params.journey.id,
         phoneNumber: params.phoneNumber,
         locale: params.locale,
-        channel: "ussd",
+        channel: params.channel,
         answers: params.answers,
       });
 
