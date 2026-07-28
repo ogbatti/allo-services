@@ -3,7 +3,11 @@
 .SYNOPSIS
   Scaffold a new country tenant from templates (config only).
 
+.NOTES
+  Run from the monorepo root (APPS), not from apps/web.
+
 .EXAMPLE
+  cd "C:\Users\GBATTI\Projects\ALLO SERVICES\APPS"
   powershell -ExecutionPolicy Bypass -File scripts\scaffold-tenant.ps1 `
     -TenantId sn -CountryCode SN -NameFr "Sénégal" -NameEn "Senegal" `
     -UssdShortCode "*850#" -FeeAmount 400

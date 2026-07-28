@@ -1,0 +1,32 @@
+﻿{
+  "id": "sn",
+  "countryCode": "SN",
+  "name": {
+    "fr": "Sénégal",
+    "en": "Senegal"
+  },
+  "defaultLocale": "fr",
+  "supportedLocales": ["fr", "en"],
+  "currency": "XOF",
+  "ussdShortCode": "*850#",
+  "voiceShortNumber": "850",
+  "smsSenderId": "ALLO-SN",
+  "modules": [
+    "platform-core",
+    "journey-engine",
+    "case-management",
+    "channels-ussd",
+    "channels-sms",
+    "channels-web",
+    "channels-agent",
+    "payments",
+    "notifications",
+    "partner-backoffice",
+    "service-pack-civil-status"
+  ],
+  "connectors": {
+    "payment": "simulator",
+    "sms": "simulator"
+  }
+}
+

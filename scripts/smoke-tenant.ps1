@@ -41,16 +41,16 @@ Write-Host "==> Tenant $TenantId"
 $tenants = Get-Json GET "$ApiBase/tenants"
 $tenant = $tenants | Where-Object { $_.id -eq $TenantId }
 if (-not $tenant) { throw "Tenant not found: $TenantId" }
-Write-Host ("  {0} · USSD {1} · modules={2}" -f $tenant.name.fr, $tenant.ussdShortCode, ($tenant.modules -join ","))
+Write-Host ("  {0} | USSD {1} | modules={2}" -f $tenant.name.fr, $tenant.ussdShortCode, ($tenant.modules -join ","))
 
 Write-Host "==> Journeys"
 $journeys = Get-Json GET "$ApiBase/journeys?tenantId=$TenantId"
-Write-Host ("  count={0} · {1}" -f $journeys.Count, (($journeys | ForEach-Object { $_.id }) -join ", "))
+Write-Host ("  count={0} | {1}" -f $journeys.Count, (($journeys | ForEach-Object { $_.id }) -join ", "))
 if ($journeys.Count -lt 1) { throw "No journeys for tenant $TenantId" }
 
 Write-Host "==> Connectors"
 $conn = Get-Json GET "$ApiBase/connectors/$TenantId"
-Write-Host ("  payment={0} · sms={1}" -f $conn.payment.id, $conn.sms.id)
+Write-Host ("  payment={0} | sms={1}" -f $conn.payment.id, $conn.sms.id)
 
 Write-Host "==> USSD start"
 $ussd = Get-Json POST "$ApiBase/channels/ussd" (@{
@@ -74,7 +74,7 @@ Write-Host $step.message
 Write-Host "==> Stats"
 $stats = Get-Json GET "$ApiBase/stats/demo?tenantId=$TenantId"
 $row = $stats.tenants | Select-Object -First 1
-Write-Host ("  cases={0} · sms={1}" -f $row.casesTotal, $row.smsTotal)
+Write-Host ("  cases={0} | sms={1}" -f $row.casesTotal, $row.smsTotal)
 
 Write-Host ""
-Write-Host "OK — tenant pack $TenantId looks healthy."
+Write-Host "OK - tenant pack $TenantId looks healthy."

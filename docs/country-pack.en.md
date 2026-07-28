@@ -23,6 +23,9 @@ Solo estimate: **1–3 days** for a minimal civil-status demo pack.
 ### Fast path (script)
 
 ```powershell
+# From the monorepo root (APPS folder), not apps/web
+cd "C:\Users\GBATTI\Projects\ALLO SERVICES\APPS"
+
 powershell -ExecutionPolicy Bypass -File scripts\scaffold-tenant.ps1 `
   -TenantId sn -CountryCode SN -NameFr "Sénégal" -NameEn "Senegal" `
   -UssdShortCode "*850#" -FeeAmount 400
@@ -67,7 +70,10 @@ powershell -ExecutionPolicy Bypass -File scripts\scaffold-tenant.ps1 `
 ## Day 3 — Smoke & partner demo
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\smoke-tenant.ps1 -TenantId sn -Phone +221700000001
+# From the monorepo root (APPS folder), not apps/web
+cd "C:\Users\GBATTI\Projects\ALLO SERVICES\APPS"
+
+powershell -ExecutionPolicy Bypass -File scripts\smoke-tenant.ps1 -TenantId sn
 ```
 
 Live demo checklist:

@@ -23,6 +23,9 @@ Durée indicative solo : **1–3 jours** pour un pack civil-status minimal en d�
 ### Option rapide (script)
 
 ```powershell
+# Depuis la racine du monorepo (dossier APPS), pas apps/web
+cd "C:\Users\GBATTI\Projects\ALLO SERVICES\APPS"
+
 powershell -ExecutionPolicy Bypass -File scripts\scaffold-tenant.ps1 `
   -TenantId sn -CountryCode SN -NameFr "Sénégal" -NameEn "Senegal" `
   -UssdShortCode "*850#" -FeeAmount 400
@@ -67,7 +70,10 @@ powershell -ExecutionPolicy Bypass -File scripts\scaffold-tenant.ps1 `
 ## Jour 3 — Smoke & démo partenaire
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File scripts\smoke-tenant.ps1 -TenantId sn -Phone +221700000001
+# Depuis la racine du monorepo (dossier APPS), pas apps/web
+cd "C:\Users\GBATTI\Projects\ALLO SERVICES\APPS"
+
+powershell -ExecutionPolicy Bypass -File scripts\smoke-tenant.ps1 -TenantId sn
 ```
 
 Checklist démo live :
