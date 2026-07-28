@@ -124,7 +124,7 @@ export class AuthService implements OnModuleInit {
     );
     const all: SeedInstructor[] = [];
     for (const file of files) {
-      const raw = readFileSync(join(dir, file), "utf8");
+      const raw = readFileSync(join(dir, file), "utf8").replace(/^\uFEFF/, "");
       const parsed = JSON.parse(raw) as SeedInstructor[] | SeedInstructor;
       if (Array.isArray(parsed)) all.push(...parsed);
       else all.push(parsed);

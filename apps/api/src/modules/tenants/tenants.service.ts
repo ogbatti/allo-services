@@ -41,7 +41,7 @@ export class TenantsService implements OnModuleInit {
     );
 
     for (const file of files) {
-      const raw = readFileSync(join(dir, file), "utf8");
+      const raw = readFileSync(join(dir, file), "utf8").replace(/^\uFEFF/, "");
       const config = JSON.parse(raw) as TenantConfig;
       this.cache.set(config.id, config);
 

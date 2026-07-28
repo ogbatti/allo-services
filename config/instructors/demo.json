@@ -1,23 +1,23 @@
-﻿[
-    {
-        "tenantId":  "tg",
-        "email":  "instructeur@lome.tg",
-        "name":  "Agent Commune Lomé",
-        "password":  "Demo2026!",
-        "role":  "instructor"
-    },
-    {
-        "tenantId":  "bj",
-        "email":  "instructeur@cotonou.bj",
-        "name":  "Agent Mairie Cotonou",
-        "password":  "Demo2026!",
-        "role":  "instructor"
-    },
-    {
-        "tenantId":  "sn",
-        "email":  "instructeur@sn.demo",
-        "name":  "Agent Sénégal",
-        "password":  "Demo2026!",
-        "role":  "instructor"
-    }
+[
+  {
+    "tenantId": "tg",
+    "email": "instructeur@lome.tg",
+    "name": "Agent Commune Lomé",
+    "password": "Demo2026!",
+    "role": "instructor"
+  },
+  {
+    "tenantId": "bj",
+    "email": "instructeur@cotonou.bj",
+    "name": "Agent Mairie Cotonou",
+    "password": "Demo2026!",
+    "role": "instructor"
+  },
+  {
+    "tenantId": "sn",
+    "email": "instructeur@sn.demo",
+    "name": "Agent Sénégal",
+    "password": "Demo2026!",
+    "role": "instructor"
+  }
 ]

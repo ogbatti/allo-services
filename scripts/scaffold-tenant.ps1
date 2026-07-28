@@ -52,17 +52,19 @@ $tenantTpl = $tenantTpl.Replace('"en": "Country name"', "`"en`": `"$NameEn`"")
 $tenantTpl = $tenantTpl.Replace('"ussdShortCode": "*000#"', "`"ussdShortCode`": `"$UssdShortCode`"")
 $tenantTpl = $tenantTpl.Replace('"voiceShortNumber": "000"', "`"voiceShortNumber`": `"$voice`"")
 $tenantTpl = $tenantTpl.Replace('"smsSenderId": "ALLO-XX"', "`"smsSenderId`": `"$SmsSenderId`"")
-Set-Content -Path $tenantPath -Value $tenantTpl -Encoding UTF8
+$utf8 = New-Object System.Text.UTF8Encoding $false
+[System.IO.File]::WriteAllText($tenantPath, $tenantTpl, $utf8)
 
 $journeyTpl = Get-Content (Join-Path $Root "config\journeys\_template-civil-status.json") -Raw -Encoding UTF8
 $journeyTpl = $journeyTpl.Replace("civil-status-birth-certificate-xx", "civil-status-birth-certificate-$TenantId")
 $journeyTpl = $journeyTpl.Replace('"tenantId": "xx"', "`"tenantId`": `"$TenantId`"")
 $journeyTpl = $journeyTpl.Replace('"feeAmount": 500', "`"feeAmount`": $FeeAmount")
-Set-Content -Path $journeyPath -Value $journeyTpl -Encoding UTF8
+[System.IO.File]::WriteAllText($journeyPath, $journeyTpl, $utf8)
 
 $instructors = @()
 if (Test-Path $instructorsPath) {
-  $instructors = Get-Content $instructorsPath -Raw -Encoding UTF8 | ConvertFrom-Json
+  $rawInstr = [System.IO.File]::ReadAllText($instructorsPath).TrimStart([char]0xFEFF)
+  $instructors = $rawInstr | ConvertFrom-Json
   if ($instructors -isnot [System.Array]) { $instructors = @($instructors) }
 }
 $instructors = @($instructors) + @(
@@ -74,7 +76,8 @@ $instructors = @($instructors) + @(
     role     = "instructor"
   }
 )
-($instructors | ConvertTo-Json -Depth 5) | Set-Content -Path $instructorsPath -Encoding UTF8
+$instrJson = ($instructors | ConvertTo-Json -Depth 5)
+[System.IO.File]::WriteAllText($instructorsPath, $instrJson + "`n", $utf8)
 
 Write-Host "Created:"
 Write-Host "  $tenantPath"

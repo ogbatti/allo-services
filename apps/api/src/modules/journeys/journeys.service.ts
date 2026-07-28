@@ -58,7 +58,7 @@ export class JourneysService implements OnModuleInit {
       (f) => f.endsWith(".json") && !f.startsWith("_"),
     );
     for (const file of files) {
-      const raw = readFileSync(join(dir, file), "utf8");
+      const raw = readFileSync(join(dir, file), "utf8").replace(/^\uFEFF/, "");
       const journey = JSON.parse(raw) as JourneyDefinition;
       this.cache.set(journey.id, journey);
     }
