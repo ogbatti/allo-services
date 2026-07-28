@@ -2,9 +2,23 @@
   {
     "tenantId": "tg",
     "email": "instructeur@lome.tg",
-    "name": "Agent Commune Lomé",
+    "name": "Agent Commune LomÃƒÂ©",
     "password": "Demo2026!",
     "role": "instructor"
+  },
+  {
+    "tenantId": "tg",
+    "email": "superviseur@lome.tg",
+    "name": "Superviseur LomÃƒÂ©",
+    "password": "Demo2026!",
+    "role": "supervisor"
+  },
+  {
+    "tenantId": "tg",
+    "email": "admin@lome.tg",
+    "name": "Admin tenant TG",
+    "password": "Demo2026!",
+    "role": "tenant_admin"
   },
   {
     "tenantId": "bj",
@@ -14,10 +28,24 @@
     "role": "instructor"
   },
   {
+    "tenantId": "bj",
+    "email": "admin@cotonou.bj",
+    "name": "Admin tenant BJ",
+    "password": "Demo2026!",
+    "role": "tenant_admin"
+  },
+  {
     "tenantId": "sn",
     "email": "instructeur@sn.demo",
-    "name": "Agent Sénégal",
+    "name": "Agent SÃƒÂ©nÃƒÂ©gal",
     "password": "Demo2026!",
     "role": "instructor"
+  },
+  {
+    "tenantId": "sn",
+    "email": "admin@sn.demo",
+    "name": "Admin tenant SN",
+    "password": "Demo2026!",
+    "role": "tenant_admin"
   }
 ]

@@ -6,6 +6,7 @@ import {
   CaseDetails,
   CaseSummary,
   Instructor,
+  StaffMember,
   TenantSummary,
   allowedTransitionsFor,
   getCase,
@@ -13,9 +14,11 @@ import {
   instructCase,
   listCases,
   listInbox,
+  listStaff,
   listTenants,
   loginInstructor,
   meInstructor,
+  setStaffActive,
   setToken,
 } from "@/lib/api";
 import {
@@ -24,12 +27,14 @@ import {
   getServicePackUi,
   statusLabel,
 } from "@/lib/service-packs";
+import { isSupervisorPlus, isTenantAdmin, roleLabel } from "@/lib/roles";
 
 type Filter = "inbox" | "all" | "ready" | "rejected";
 
 const FALLBACK_EMAILS: Record<string, string> = {
   tg: "instructeur@lome.tg",
   bj: "instructeur@cotonou.bj",
+  sn: "instructeur@sn.demo",
 };
 
 export default function BackofficePage() {
@@ -47,6 +52,7 @@ export default function BackofficePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const [staff, setStaff] = useState<StaffMember[]>([]);
 
   const selectedPack = useMemo(
     () => (selected ? getServicePackUi(selected.serviceCode) : null),
@@ -105,6 +111,15 @@ export default function BackofficePage() {
           ? rows.filter((r) => r.serviceCode === serviceCode)
           : rows;
       setCases(filtered);
+      if (isSupervisorPlus(instructor.role)) {
+        try {
+          setStaff(await listStaff());
+        } catch {
+          setStaff([]);
+        }
+      } else {
+        setStaff([]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur de chargement");
     } finally {
@@ -187,6 +202,23 @@ export default function BackofficePage() {
     }
   }
 
+  async function toggleStaff(member: StaffMember) {
+    if (!instructor || !isTenantAdmin(instructor.role)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await setStaffActive(member.id, !member.active);
+      setOk(
+        `${member.email} ${member.active ? "désactivé" : "réactivé"}`,
+      );
+      await refresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Action impossible");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   if (!authReady) {
     return (
       <main className="shell">
@@ -261,8 +293,8 @@ export default function BackofficePage() {
             Se connecter
           </button>
           <p className="meta" style={{ marginTop: "0.85rem" }}>
-            Démo : instructeur@lome.tg ou instructeur@cotonou.bj · Demo2026!
-            (nouveaux pays : voir config/instructors)
+            TG: instructeur@ / superviseur@ / admin@lome.tg · BJ/SN: instructeur@
+            ou admin@ · mot de passe Demo2026!
           </p>
         </form>
       </main>
@@ -277,11 +309,13 @@ export default function BackofficePage() {
       />
 
       <p className="tag">
-        Back-office · Tenant {instructor.tenantId.toUpperCase()}
+        Back-office · Tenant {instructor.tenantId.toUpperCase()} ·{" "}
+        {roleLabel(instructor.role)}
       </p>
       <h1 className="brand">Instruction des dossiers</h1>
       <p className="lede">
-        Actions et SMS adaptés au type de service (état civil, RDV, factures).
+        Actions et SMS adaptés au type de service. Les transitions dépendent de
+        votre rôle ({roleLabel(instructor.role)}).
       </p>
 
       <div className="row" style={{ marginBottom: "1rem" }}>
@@ -295,7 +329,7 @@ export default function BackofficePage() {
           Dashboard
         </Link>
         <span className="meta">
-          {instructor.name} · {instructor.email}
+          {instructor.name} · {instructor.email} · {roleLabel(instructor.role)}
         </span>
         <button type="button" className="secondary" onClick={logout}>
           Déconnexion
@@ -468,6 +502,44 @@ export default function BackofficePage() {
           )}
         </section>
       </div>
+
+      {isSupervisorPlus(instructor.role) ? (
+        <section className="panel" style={{ marginTop: "1.25rem" }}>
+          <h2>Équipe ({staff.length})</h2>
+          <p className="meta">
+            Visible pour superviseur / admin. Seul l&apos;admin peut activer ou
+            désactiver un compte.
+          </p>
+          <div className="list">
+            {staff.length === 0 ? (
+              <p className="meta">Aucun agent chargé.</p>
+            ) : (
+              staff.map((m) => (
+                <div className="item" key={m.id}>
+                  <strong>
+                    {m.name} · {roleLabel(m.role)}
+                  </strong>
+                  <span className="meta">
+                    {m.email} · {m.active ? "actif" : "inactif"}
+                  </span>
+                  {isTenantAdmin(instructor.role) &&
+                  m.email !== instructor.email ? (
+                    <button
+                      type="button"
+                      className="secondary"
+                      disabled={busy}
+                      onClick={() => void toggleStaff(m)}
+                      style={{ marginTop: "0.4rem" }}
+                    >
+                      {m.active ? "Désactiver" : "Réactiver"}
+                    </button>
+                  ) : null}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      ) : null}
     </main>
   );
 }

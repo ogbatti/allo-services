@@ -15,12 +15,13 @@ Priority: **prove adoption by configuration** and get ready for a state / donor 
 - [x] Community agent channel (same journeys, `channel=agent`)
 - [x] Demo dashboard (`GET /stats/demo`)
 - [x] Documented country pack (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
+- [x] Back-office roles (`instructor` / `supervisor` / `tenant_admin`)
 
 ## P1 — Next wave (partners)
 
 1. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).  
-2. **Back-office roles** — instructor / supervisor / tenant admin.  
-3. **Exportable audit trail**
+2. **Exportable audit trail**  
+3. **WhatsApp / voice** (stubs then pilot connectors)
 
 ## P2 — Hardening
 

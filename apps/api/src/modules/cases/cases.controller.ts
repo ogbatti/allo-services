@@ -34,8 +34,17 @@ export class CasesController {
   }
 
   @Get(":trackingNumber")
-  get(@Param("trackingNumber") trackingNumber: string) {
-    return this.cases.findByTrackingNumber(trackingNumber);
+  get(
+    @Param("trackingNumber") trackingNumber: string,
+    @Headers("authorization") authorization?: string,
+  ) {
+    let role: string | undefined;
+    try {
+      role = this.auth.requirePayload(authorization).role;
+    } catch {
+      role = undefined;
+    }
+    return this.cases.findByTrackingNumber(trackingNumber, role);
   }
 
   @Post()
@@ -49,11 +58,15 @@ export class CasesController {
     @Body() dto: InstructCaseDto,
     @Headers("authorization") authorization?: string,
   ) {
-    const user = this.auth.requirePayload(authorization);
-    return this.cases.instruct(trackingNumber, {
-      ...dto,
-      actor: dto.actor?.trim() || user.name,
-    });
+    const user = this.auth.requireRole(authorization, "instructor");
+    return this.cases.instruct(
+      trackingNumber,
+      {
+        ...dto,
+        actor: dto.actor?.trim() || user.name,
+      },
+      user.role,
+    );
   }
 
   @Post(":trackingNumber/instruct")
@@ -62,10 +75,14 @@ export class CasesController {
     @Body() dto: InstructCaseDto,
     @Headers("authorization") authorization?: string,
   ) {
-    const user = this.auth.requirePayload(authorization);
-    return this.cases.instruct(trackingNumber, {
-      ...dto,
-      actor: dto.actor?.trim() || user.name,
-    });
+    const user = this.auth.requireRole(authorization, "instructor");
+    return this.cases.instruct(
+      trackingNumber,
+      {
+        ...dto,
+        actor: dto.actor?.trim() || user.name,
+      },
+      user.role,
+    );
   }
 }

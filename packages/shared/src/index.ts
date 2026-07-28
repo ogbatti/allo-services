@@ -181,3 +181,12 @@ export type {
   ServicePackDefinition,
   InstructAction,
 } from "./service-packs";
+
+export {
+  STAFF_ROLES,
+  ROLE_LABELS,
+  isStaffRole,
+  roleAtLeast,
+  transitionsForRole,
+} from "./roles";
+export type { StaffRole } from "./roles";

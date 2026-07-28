@@ -215,6 +215,26 @@ export function meInstructor() {
   return request<Instructor>("/auth/me");
 }
 
+export type StaffMember = {
+  id: string;
+  tenantId: string;
+  email: string;
+  name: string;
+  role: string;
+  active: boolean;
+};
+
+export function listStaff() {
+  return request<StaffMember[]>("/auth/staff");
+}
+
+export function setStaffActive(id: string, active: boolean) {
+  return request<StaffMember>(`/auth/staff/${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    body: JSON.stringify({ active }),
+  });
+}
+
 export function listNotifications(tenantId = "tg") {
   return request<
     Array<{

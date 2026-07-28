@@ -21,10 +21,13 @@ Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
 
 **Comptes instructeur (mot de passe `Demo2026!`)**
 
-| Tenant | E-mail |
-|--------|--------|
-| Togo (`tg`) | `instructeur@lome.tg` |
-| Bénin (`bj`) | `instructeur@cotonou.bj` |
+| Tenant | E-mail | Rôle |
+|--------|--------|------|
+| Togo (`tg`) | `instructeur@lome.tg` | instructeur |
+| Togo (`tg`) | `superviseur@lome.tg` | superviseur |
+| Togo (`tg`) | `admin@lome.tg` | admin tenant |
+| Bénin (`bj`) | `instructeur@cotonou.bj` / `admin@cotonou.bj` | … |
+| Sénégal (`sn`) | `instructeur@sn.demo` / `admin@sn.demo` | … |
 
 ---
 

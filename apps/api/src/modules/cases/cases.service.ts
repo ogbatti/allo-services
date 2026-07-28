@@ -8,6 +8,7 @@ import {
   fillTemplate,
   getServicePack,
   pickLocale,
+  transitionsForRole,
 } from "@allo/shared";
 import { PrismaService } from "../../prisma/prisma.service";
 import { JourneysService } from "../journeys/journeys.service";
@@ -88,7 +89,7 @@ export class CasesService {
     return this.toSummary(created);
   }
 
-  async findByTrackingNumber(trackingNumber: string) {
+  async findByTrackingNumber(trackingNumber: string, role?: string) {
     const item = await this.prisma.case.findUnique({
       where: { trackingNumber },
       include: {
@@ -103,13 +104,16 @@ export class CasesService {
         en: `Case not found: ${trackingNumber}`,
       });
     }
+    const allowed = role
+      ? transitionsForRole(item.status, role)
+      : (ALLOWED_TRANSITIONS[item.status] ?? []);
     return {
       ...this.toSummary(item),
       payload: JSON.parse(item.payloadJson) as Record<string, string>,
       events: item.statusEvents,
       payments: item.payments,
       notifications: item.notifications,
-      allowedTransitions: ALLOWED_TRANSITIONS[item.status] ?? [],
+      allowedTransitions: allowed,
     };
   }
 
@@ -136,7 +140,11 @@ export class CasesService {
     return this.list(tenantId, "in_review");
   }
 
-  async instruct(trackingNumber: string, dto: InstructCaseDto) {
+  async instruct(
+    trackingNumber: string,
+    dto: InstructCaseDto,
+    role = "instructor",
+  ) {
     const current = await this.prisma.case.findUnique({
       where: { trackingNumber },
     });
@@ -147,11 +155,15 @@ export class CasesService {
       });
     }
 
-    const allowed = ALLOWED_TRANSITIONS[current.status] ?? [];
-    if (!allowed.includes(dto.toStatus)) {
+    const engineAllowed = ALLOWED_TRANSITIONS[current.status] ?? [];
+    const roleAllowed = transitionsForRole(current.status, role);
+    if (
+      !engineAllowed.includes(dto.toStatus) ||
+      !roleAllowed.includes(dto.toStatus)
+    ) {
       throw new BadRequestException({
-        fr: `Transition interdite: ${current.status} → ${dto.toStatus}`,
-        en: `Transition not allowed: ${current.status} → ${dto.toStatus}`,
+        fr: `Transition interdite pour votre rôle: ${current.status} → ${dto.toStatus}`,
+        en: `Transition not allowed for your role: ${current.status} → ${dto.toStatus}`,
       });
     }
 
@@ -187,7 +199,7 @@ export class CasesService {
       note: dto.note?.trim(),
     });
 
-    return this.findByTrackingNumber(updated.trackingNumber);
+    return this.findByTrackingNumber(updated.trackingNumber, role);
   }
 
   async transition(

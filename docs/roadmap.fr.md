@@ -15,12 +15,13 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Canal agent communautaire (mêmes parcours, `channel=agent`)
 - [x] Tableau de bord démo (`GET /stats/demo`)
 - [x] Pack pays documenté (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
+- [x] Rôles back-office (`instructor` / `supervisor` / `tenant_admin`)
 
 ## P1 — Prochaine vague (partenaires)
 
 1. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
-2. **Rôles back-office** — instructeur / superviseur / admin tenant.  
-3. **Journal d’audit exportable**
+2. **Journal d’audit exportable**  
+3. **WhatsApp / voix** (stubs puis connecteurs pilotes)
 
 ## P2 — Renforcement
 
