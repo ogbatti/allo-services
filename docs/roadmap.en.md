@@ -16,18 +16,17 @@ Priority: **prove adoption by configuration** and get ready for a state / donor 
 - [x] Demo dashboard (`GET /stats/demo`)
 - [x] Documented country pack (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
 - [x] Back-office roles (`instructor` / `supervisor` / `tenant_admin`)
+- [x] Exportable audit trail (filters + JSON / CSV)
 
 ## P1 — Next wave (partners)
 
 1. **Pilot real connector** — one SMS or MM behind the existing interface (with a partner).  
-2. **Exportable audit trail**  
-3. **WhatsApp / voice** (stubs then pilot connectors)
+2. **WhatsApp / voice** (stubs then pilot connectors)
 
 ## P2 — Hardening
 
 - WhatsApp / voice (stubs, then pilot connectors)  
 - Back-office roles (instructor / supervisor / tenant admin)  
-- Exportable audit trail  
 - Automated e2e tests on reference journeys
 
 ## P3 — Ecosystem

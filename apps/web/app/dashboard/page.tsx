@@ -49,6 +49,9 @@ export default function DashboardPage() {
         <Link href="/backoffice" className="meta">
           Back-office
         </Link>
+        <Link href="/audit" className="meta">
+          Audit
+        </Link>
         <button
           type="button"
           className="secondary"

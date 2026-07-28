@@ -33,6 +33,7 @@ export default function AgentPage() {
 
   useEffect(() => {
     setPhoneNumber(tenantId === "bj" ? "+22990000011" : "+22890000011");
+    if (tenantId === "sn") setPhoneNumber("+22170000011");
     setSessionId(undefined);
     setScreen("…");
     setInput("");
@@ -58,14 +59,7 @@ export default function AgentPage() {
     setBusy(true);
     setError(null);
     try {
-      await apply(
-        await agentStep({
-          tenantId,
-          phoneNumber,
-          locale,
-          agentName,
-        }),
-      );
+      await apply(await agentStep({ tenantId, phoneNumber, locale, agentName }));
       setInput("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
@@ -116,8 +110,8 @@ export default function AgentPage() {
       <p className="tag">Canal agent · Inclusion / dernier kilomètre</p>
       <h1 className="brand">Guichet agent communautaire</h1>
       <p className="lede">
-        L&apos;agent saisit le parcours à la place de l&apos;usager (même moteur
-        que l&apos;USSD). Le dossier est créé avec le canal <code>agent</code>.
+        L'agent saisit le parcours à la place de l'usager. Le dossier est créé
+        avec le canal <code>agent</code>.
       </p>
 
       <div className="row" style={{ marginBottom: "1rem", flexWrap: "wrap" }}>
@@ -129,6 +123,9 @@ export default function AgentPage() {
         </Link>
         <Link href="/dashboard" className="meta">
           Tableau de bord
+        </Link>
+        <Link href="/audit" className="meta">
+          Audit
         </Link>
       </div>
 
@@ -160,7 +157,7 @@ export default function AgentPage() {
           </select>
 
           <label className="meta" htmlFor="agentName">
-            Nom de l&apos;agent
+            Nom de l'agent
           </label>
           <input
             id="agentName"
@@ -170,7 +167,7 @@ export default function AgentPage() {
           />
 
           <label className="meta" htmlFor="phone">
-            Téléphone de l&apos;usager
+            Téléphone de l'usager
           </label>
           <div className="row">
             <input
@@ -181,12 +178,7 @@ export default function AgentPage() {
             <button type="button" onClick={() => void startSession()} disabled={busy}>
               Démarrer
             </button>
-            <button
-              type="button"
-              className="secondary"
-              onClick={reset}
-              disabled={busy}
-            >
+            <button type="button" className="secondary" onClick={reset} disabled={busy}>
               Nouvelle session
             </button>
           </div>
@@ -240,10 +232,7 @@ export default function AgentPage() {
               </div>
             </div>
           ) : (
-            <p className="meta">
-              Aucun dossier pour l&apos;instant. Parcourez le menu comme en
-              USSD.
-            </p>
+            <p className="meta">Aucun dossier pour l'instant.</p>
           )}
         </section>
       </div>

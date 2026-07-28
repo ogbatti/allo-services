@@ -328,6 +328,9 @@ export default function BackofficePage() {
         <Link href="/dashboard" className="meta">
           Dashboard
         </Link>
+        <Link href="/audit" className="meta">
+          Audit
+        </Link>
         <span className="meta">
           {instructor.name} · {instructor.email} · {roleLabel(instructor.role)}
         </span>

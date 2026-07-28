@@ -262,6 +262,8 @@ export default function HomePage() {
         <Link href="/agent">Agent communautaire</Link>
         {" · "}
         <Link href="/dashboard">Tableau de bord</Link>
+        {" · "}
+        <Link href="/audit">Audit</Link>
       </p>
 
       <div className="row" style={{ marginBottom: "1rem" }}>

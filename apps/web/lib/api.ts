@@ -299,3 +299,81 @@ export function getDemoStats(tenantId?: string) {
   const q = tenantId ? `?tenantId=${encodeURIComponent(tenantId)}` : "";
   return request<DemoStats>(`/stats/demo${q}`);
 }
+
+export type AuditEvent = {
+  id: string;
+  createdAt: string;
+  actor: string;
+  fromStatus: string | null;
+  toStatus: string;
+  note: string | null;
+  trackingNumber: string;
+  tenantId: string;
+  serviceCode: string;
+  caseStatus: string;
+  channel: string;
+  phoneNumber: string;
+};
+
+export function listAuditEvents(filters?: {
+  serviceCode?: string;
+  toStatus?: string;
+  from?: string;
+  to?: string;
+  actor?: string;
+}) {
+  const q = new URLSearchParams();
+  if (filters?.serviceCode) q.set("serviceCode", filters.serviceCode);
+  if (filters?.toStatus) q.set("toStatus", filters.toStatus);
+  if (filters?.from) q.set("from", filters.from);
+  if (filters?.to) q.set("to", filters.to);
+  if (filters?.actor) q.set("actor", filters.actor);
+  const suffix = q.toString() ? `?${q.toString()}` : "";
+  return request<AuditEvent[]>(`/audit${suffix}`);
+}
+
+export function auditExportUrl(filters?: {
+  format?: "json" | "csv";
+  serviceCode?: string;
+  toStatus?: string;
+  from?: string;
+  to?: string;
+  actor?: string;
+}) {
+  const q = new URLSearchParams();
+  q.set("format", filters?.format ?? "csv");
+  if (filters?.serviceCode) q.set("serviceCode", filters.serviceCode);
+  if (filters?.toStatus) q.set("toStatus", filters.toStatus);
+  if (filters?.from) q.set("from", filters.from);
+  if (filters?.to) q.set("to", filters.to);
+  if (filters?.actor) q.set("actor", filters.actor);
+  return `${resolveApiBase()}/audit/export?${q.toString()}`;
+}
+
+export async function downloadAuditExport(filters?: {
+  format?: "json" | "csv";
+  serviceCode?: string;
+  toStatus?: string;
+  from?: string;
+  to?: string;
+  actor?: string;
+}) {
+  const url = auditExportUrl(filters);
+  const headers: Record<string, string> = {};
+  const token = getToken();
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const res = await fetch(url, {
+    headers,
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    throw new Error(formatApiError(res.status, await res.text()));
+  }
+  const blob = await res.blob();
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = `audit.${filters?.format ?? "csv"}`;
+  a.click();
+  URL.revokeObjectURL(href);
+}

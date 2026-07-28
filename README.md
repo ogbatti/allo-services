@@ -16,6 +16,7 @@ Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
 | Citoyen / Citizen | https://web-omega-bay-47.vercel.app |
 | Agent communautaire | https://web-omega-bay-47.vercel.app/agent |
 | Tableau de bord | https://web-omega-bay-47.vercel.app/dashboard |
+| Journal d'audit | https://web-omega-bay-47.vercel.app/audit |
 | Back-office | https://web-omega-bay-47.vercel.app/backoffice |
 | API | https://allo-services-api.fly.dev/api/v1/health |
 
@@ -39,7 +40,8 @@ Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
 2. Choisir le tenant **TG** (pack complet) ou **BJ** (sans factures).
 3. Composer le code USSD affiché → `1` (acte) ou `2` (RDV) ; sur TG aussi `3` (facture).
 4. Noter le **n° de suivi**, ouvrir le [back-office](https://web-omega-bay-47.vercel.app/backoffice), se connecter, instruire le dossier (boutons adaptés au service).
-5. Vérifier le SMS simulé sur la page citoyen.
+5. Ouvrir le [journal d'audit](https://web-omega-bay-47.vercel.app/audit) pour exporter l'historique CSV / JSON des actions.
+6. Vérifier le SMS simulé sur la page citoyen.
 
 ### Option B — En local
 
@@ -101,7 +103,8 @@ docs/              Architecture, déploiement, roadmap
 2. Pick tenant **TG** (full pack) or **BJ** (no bills).
 3. Dial the shown USSD code → `1` (birth certificate) or `2` (appointment); on TG also `3` (bill).
 4. Note the **tracking number**, open the [back-office](https://web-omega-bay-47.vercel.app/backoffice), sign in, instruct the case (service-specific actions).
-5. Check the simulated SMS on the citizen page.
+5. Open the [audit log](https://web-omega-bay-47.vercel.app/audit) to export the action history as CSV / JSON.
+6. Check the simulated SMS on the citizen page.
 
 ### Option B — Local
 

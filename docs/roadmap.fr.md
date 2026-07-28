@@ -16,18 +16,17 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Tableau de bord démo (`GET /stats/demo`)
 - [x] Pack pays documenté (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
 - [x] Rôles back-office (`instructor` / `supervisor` / `tenant_admin`)
+- [x] Journal d'audit exportable (filtres + JSON / CSV)
 
 ## P1 — Prochaine vague (partenaires)
 
 1. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
-2. **Journal d’audit exportable**  
-3. **WhatsApp / voix** (stubs puis connecteurs pilotes)
+2. **WhatsApp / voix** (stubs puis connecteurs pilotes)
 
 ## P2 — Renforcement
 
 - WhatsApp / voix (stubs puis connecteurs pilotes)  
 - Niveaux de rôle back-office (instructeur / superviseur / admin tenant)  
-- Journal d’audit exportable  
 - Tests e2e automatisés sur les parcours de référence
 
 ## P3 — Écosystème
