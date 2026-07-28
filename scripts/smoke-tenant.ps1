@@ -44,7 +44,7 @@ if (-not $tenant) { throw "Tenant not found: $TenantId" }
 Write-Host ("  {0} | USSD {1} | modules={2}" -f $tenant.name.fr, $tenant.ussdShortCode, ($tenant.modules -join ","))
 
 Write-Host "==> Journeys"
-$journeys = Get-Json GET "$ApiBase/journeys?tenantId=$TenantId"
+$journeys = @(Get-Json GET "$ApiBase/journeys?tenantId=$TenantId")
 Write-Host ("  count={0} | {1}" -f $journeys.Count, (($journeys | ForEach-Object { $_.id }) -join ", "))
 if ($journeys.Count -lt 1) { throw "No journeys for tenant $TenantId" }
 
