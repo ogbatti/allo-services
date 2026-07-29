@@ -62,6 +62,12 @@ export default function AuditPage() {
         <Link href="/agent" className="meta">
           Agent
         </Link>
+        <Link href="/whatsapp" className="meta">
+          WhatsApp
+        </Link>
+        <Link href="/voice" className="meta">
+          Voix
+        </Link>
         <Link href="/backoffice" className="meta">
           Back-office
         </Link>

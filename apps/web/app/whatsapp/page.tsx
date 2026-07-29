@@ -5,17 +5,16 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import {
   CaseDetails,
   TenantSummary,
-  agentStep,
   getCase,
   listTenants,
+  whatsappStep,
   type ChannelResponse,
 } from "@/lib/api";
 
-export default function AgentPage() {
+export default function WhatsappPage() {
   const [tenants, setTenants] = useState<TenantSummary[]>([]);
   const [tenantId, setTenantId] = useState("tg");
-  const [agentName, setAgentName] = useState("Agent Kofi");
-  const [phoneNumber, setPhoneNumber] = useState("+22890000011");
+  const [phoneNumber, setPhoneNumber] = useState("+22890000022");
   const [locale, setLocale] = useState<"fr" | "en">("fr");
   const [sessionId, setSessionId] = useState<string | undefined>();
   const [screen, setScreen] = useState("…");
@@ -32,8 +31,13 @@ export default function AgentPage() {
   }, []);
 
   useEffect(() => {
-    setPhoneNumber(tenantId === "bj" ? "+22990000011" : "+22890000011");
-    if (tenantId === "sn") setPhoneNumber("+22170000011");
+    setPhoneNumber(
+      tenantId === "bj"
+        ? "+22990000022"
+        : tenantId === "sn"
+          ? "+22170000022"
+          : "+22890000022",
+    );
     setSessionId(undefined);
     setScreen("…");
     setInput("");
@@ -59,7 +63,7 @@ export default function AgentPage() {
     setBusy(true);
     setError(null);
     try {
-      await apply(await agentStep({ tenantId, phoneNumber, locale, agentName }));
+      await apply(await whatsappStep({ tenantId, phoneNumber, locale }));
       setInput("");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Erreur");
@@ -75,13 +79,12 @@ export default function AgentPage() {
     setError(null);
     try {
       await apply(
-        await agentStep({
+        await whatsappStep({
           tenantId,
           phoneNumber,
           sessionId,
           input: input.trim(),
           locale,
-          agentName,
         }),
       );
       setInput("");
@@ -107,28 +110,25 @@ export default function AgentPage() {
         href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Source+Sans+3:wght@400;600;700&display=swap"
       />
 
-      <p className="tag">Canal agent · Inclusion / dernier kilomètre</p>
-      <h1 className="brand">Guichet agent communautaire</h1>
+      <p className="tag">Canal WhatsApp · stub BSP</p>
+      <h1 className="brand">Conversation WhatsApp</h1>
       <p className="lede">
-        L'agent saisit le parcours à la place de l'usager. Le dossier est créé
-        avec le canal <code>agent</code>.
+        Mêmes parcours JSON que l&apos;USSD. Le dossier est créé avec le canal{" "}
+        <code>whatsapp</code> — prêt pour un vrai connecteur Meta / BSP.
       </p>
 
       <div className="row" style={{ marginBottom: "1rem", flexWrap: "wrap" }}>
         <Link href="/" className="meta">
           ← Citoyen
         </Link>
-        <Link href="/backoffice" className="meta">
-          Back-office
-        </Link>
-        <Link href="/dashboard" className="meta">
-          Tableau de bord
-        </Link>
-        <Link href="/whatsapp" className="meta">
-          WhatsApp
-        </Link>
         <Link href="/voice" className="meta">
           Voix
+        </Link>
+        <Link href="/agent" className="meta">
+          Agent
+        </Link>
+        <Link href="/backoffice" className="meta">
+          Back-office
         </Link>
         <Link href="/audit" className="meta">
           Audit
@@ -143,7 +143,7 @@ export default function AgentPage() {
 
       <div className="grid">
         <section className="panel">
-          <h2>Saisie assistée</h2>
+          <h2>Chat simulé</h2>
           <label className="meta" htmlFor="tenant">
             Tenant
           </label>
@@ -162,18 +162,8 @@ export default function AgentPage() {
             )}
           </select>
 
-          <label className="meta" htmlFor="agentName">
-            Nom de l'agent
-          </label>
-          <input
-            id="agentName"
-            value={agentName}
-            onChange={(e) => setAgentName(e.target.value)}
-            style={{ width: "100%", margin: "0.35rem 0 0.75rem" }}
-          />
-
           <label className="meta" htmlFor="phone">
-            Téléphone de l'usager
+            WhatsApp de l&apos;usager
           </label>
           <div className="row">
             <input
@@ -238,7 +228,7 @@ export default function AgentPage() {
               </div>
             </div>
           ) : (
-            <p className="meta">Aucun dossier pour l'instant.</p>
+            <p className="meta">Aucun dossier pour l&apos;instant.</p>
           )}
         </section>
       </div>

@@ -17,7 +17,11 @@ import { CasesService } from "../cases/cases.service";
 import { JourneysService } from "../journeys/journeys.service";
 import { PaymentsService } from "../payments/payments.service";
 import { TenantsService } from "../tenants/tenants.service";
-import { ChannelSessionDto } from "./dto";
+import {
+  ChannelSessionDto,
+  normalizeSessionChannel,
+  type SessionChannel,
+} from "./dto";
 
 const HOME_STEP = "__home__";
 const SESSION_TTL_MS = 72 * 60 * 60 * 1000;
@@ -35,7 +39,7 @@ export class UssdService {
   async handle(dto: ChannelSessionDto) {
     const tenant = this.tenants.get(dto.tenantId);
     const locale = (dto.locale ?? tenant.defaultLocale) as LocaleCode;
-    const channel = dto.channel === "agent" ? "agent" : "ussd";
+    const channel = normalizeSessionChannel(dto.channel);
 
     let session = dto.sessionId
       ? await this.prisma.channelSession.findUnique({
@@ -76,8 +80,7 @@ export class UssdService {
       answers.agentName = dto.agentName.trim();
     }
     const input = (dto.input ?? "").trim();
-    const sessionChannel =
-      session.channel === "agent" ? "agent" : ("ussd" as const);
+    const sessionChannel = normalizeSessionChannel(session.channel);
 
     if (!session.journeyId || session.currentStepId === HOME_STEP) {
       return this.handleHome({
@@ -158,7 +161,7 @@ export class UssdService {
   private homePrompt(
     tenant: TenantConfig,
     locale: LocaleCode,
-    channel: "ussd" | "agent" = "ussd",
+    channel: SessionChannel = "ussd",
   ): string {
     const country = pickLocale(tenant.name, locale);
     const mode =
@@ -166,7 +169,13 @@ export class UssdService {
         ? locale === "en"
           ? " — Agent desk"
           : " — Guichet agent"
-        : "";
+        : channel === "whatsapp"
+          ? " — WhatsApp"
+          : channel === "voice"
+            ? locale === "en"
+              ? " — Voice IVR"
+              : " — Serveur vocal"
+            : "";
     const lines = [`Allô Services ${country}${mode}`];
     for (const entry of this.catalogForTenant(tenant)) {
       const pack = getServicePack(entry.serviceCode);
@@ -174,14 +183,15 @@ export class UssdService {
         packLabel(pack, locale) || pickLocale(entry.title, locale);
       lines.push(`${entry.key}. ${label}`);
     }
+    const endsSession = channel !== "ussd";
     lines.push(
       locale === "en"
-        ? channel === "agent"
+        ? endsSession
           ? "0. End"
           : "0. Agent"
         : locale === "ee"
           ? "0. Ame"
-          : channel === "agent"
+          : endsSession
             ? "0. Terminer"
             : "0. Agent",
     );
@@ -195,7 +205,7 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenant: TenantConfig;
-    channel: "ussd" | "agent";
+    channel: SessionChannel;
   }) {
     const { sessionId, input, answers, locale, tenant, channel } = params;
     const catalog = this.catalogForTenant(tenant);
@@ -223,7 +233,7 @@ export class UssdService {
         sessionId,
         continue: false,
         message:
-          channel === "agent"
+          channel !== "ussd"
             ? locale === "en"
               ? "Session closed."
               : "Session terminée."
@@ -279,7 +289,7 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenantId: string;
-    channel: "ussd" | "agent";
+    channel: SessionChannel;
   }): Promise<{
     stepId: string;
     answers: Record<string, string>;
@@ -380,7 +390,7 @@ export class UssdService {
     locale: LocaleCode;
     phoneNumber: string;
     tenantId: string;
-    channel: "ussd" | "agent";
+    channel: SessionChannel;
   }): Promise<{
     stepId: string;
     answers: Record<string, string>;

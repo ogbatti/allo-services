@@ -261,6 +261,10 @@ export default function HomePage() {
         {" · "}
         <Link href="/agent">Agent communautaire</Link>
         {" · "}
+        <Link href="/whatsapp">WhatsApp</Link>
+        {" · "}
+        <Link href="/voice">Voix</Link>
+        {" · "}
         <Link href="/dashboard">Tableau de bord</Link>
         {" · "}
         <Link href="/audit">Audit</Link>
@@ -365,6 +369,10 @@ export default function HomePage() {
             <p className="meta">
               Connecteurs: paiement={connectors.payment.id} · SMS=
               {connectors.sms.id}
+              {connectors.whatsapp
+                ? ` · WhatsApp=${connectors.whatsapp.id}`
+                : ""}
+              {connectors.voice ? ` · voix=${connectors.voice.id}` : ""}
             </p>
           ) : null}
         </section>

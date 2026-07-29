@@ -79,6 +79,10 @@ export interface TenantConnectors {
   payment?: string;
   /** SMS connector id, e.g. simulator | stub-sms */
   sms?: string;
+  /** WhatsApp connector id, e.g. simulator | stub-whatsapp */
+  whatsapp?: string;
+  /** Voice / IVR connector id, e.g. simulator | stub-voice */
+  voice?: string;
 }
 
 export interface TenantConfig {

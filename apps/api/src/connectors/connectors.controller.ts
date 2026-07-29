@@ -14,10 +14,12 @@ export class ConnectorsController {
     return {
       payment: this.registry.listPayment(),
       sms: this.registry.listSms(),
+      whatsapp: this.registry.listWhatsapp(),
+      voice: this.registry.listVoice(),
       tenants: this.tenants.list().map((t) => this.registry.resolveForTenant(t.id)),
       note: {
-        fr: "Remplacez stub-momo / stub-sms par un SDK opérateur derrière la même interface.",
-        en: "Replace stub-momo / stub-sms with a real operator SDK behind the same interface.",
+        fr: "Remplacez stub-* par un SDK opérateur / BSP derrière la même interface.",
+        en: "Replace stub-* with a real operator / BSP SDK behind the same interface.",
       },
     };
   }

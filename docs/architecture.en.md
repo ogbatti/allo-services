@@ -59,11 +59,12 @@ flowchart LR
 | `case-management` | Yes | Cases, transitions, tracking |
 | `partner-backoffice` | Yes | Instruction + instructor JWT |
 | `channels-ussd` / `channels-web` / `channels-sms` | Yes | Simulators |
-| `payments` / `notifications` | Yes | `simulator` connectors |
+| `channels-agent` / `channels-whatsapp` / `channels-voice` | Yes | Inbound stubs (same journeys) |
+| `payments` / `notifications` | Yes | `simulator` / stub connectors |
 | `service-pack-civil-status` | Yes | Birth certificate |
 | `service-pack-appointments` | Yes | Appointment booking |
 | `service-pack-bill-payment` | Yes | Bill payment (TG) |
-| voice / WhatsApp / agents / NLU | No | Later phases |
+| NLU | No | Later phases |
 
 A tenant’s USSD home menu = **journeys whose `service-pack-*` is listed in `modules`**.
 
@@ -92,17 +93,19 @@ Interfaces live in `apps/api/src/connectors/`:
 
 | Id | Channel | Role |
 |----|---------|------|
-| `simulator` | payment + SMS | Local / TG default demo |
+| `simulator` | payment / SMS / WhatsApp / voice | Local / TG default demo |
 | `stub-momo` | payment | Fake mobile-money aggregator |
 | `stub-sms` | SMS | Fake SMS gateway |
+| `stub-whatsapp` | WhatsApp | Fake BSP (Meta Cloud API later) |
+| `stub-voice` | voice | Fake IVR / telephony |
 
-Selection: `config/tenants/*.json` → `connectors.payment` / `connectors.sms` (wins), else env `PAYMENT_CONNECTOR` / `SMS_CONNECTOR`, else `simulator`.
+Selection: `config/tenants/*.json` → `connectors.payment` / `sms` / `whatsapp` / `voice` (wins), else env `PAYMENT_CONNECTOR` / `SMS_CONNECTOR` / `WHATSAPP_CONNECTOR` / `VOICE_CONNECTOR`, else `simulator`.
 
 Runtime catalogue: `GET /api/v1/connectors` · per tenant: `GET /api/v1/connectors/:tenantId`.
 
-To plug a real operator: implement `PaymentConnector` or `SmsConnector`, register it in `ConnectorsModule`, reference the id on the tenant.
+To plug a real operator: implement the matching connector interface, register it in `ConnectorsModule`, reference the id on the tenant.
 
-**Demo reference** — TG = `simulator` / `simulator` · BJ = `stub-momo` / `stub-sms`.
+**Demo reference** — TG = simulators · BJ = `stub-momo` / `stub-sms` / `stub-whatsapp` / `stub-voice`.
 
 ## Design principles
 

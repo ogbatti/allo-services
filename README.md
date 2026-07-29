@@ -15,6 +15,8 @@ Open-source · [Apache-2.0](LICENSE) · Multi-tenant · Modular · Configurable
 |---|---|
 | Citoyen / Citizen | https://web-omega-bay-47.vercel.app |
 | Agent communautaire | https://web-omega-bay-47.vercel.app/agent |
+| WhatsApp (stub) | https://web-omega-bay-47.vercel.app/whatsapp |
+| Voix / IVR (stub) | https://web-omega-bay-47.vercel.app/voice |
 | Tableau de bord | https://web-omega-bay-47.vercel.app/dashboard |
 | Journal d'audit | https://web-omega-bay-47.vercel.app/audit |
 | Back-office | https://web-omega-bay-47.vercel.app/backoffice |

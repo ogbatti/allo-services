@@ -325,6 +325,12 @@ export default function BackofficePage() {
         <Link href="/agent" className="meta">
           Agent
         </Link>
+        <Link href="/whatsapp" className="meta">
+          WhatsApp
+        </Link>
+        <Link href="/voice" className="meta">
+          Voix
+        </Link>
         <Link href="/dashboard" className="meta">
           Dashboard
         </Link>

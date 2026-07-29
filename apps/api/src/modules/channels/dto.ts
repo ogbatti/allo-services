@@ -1,5 +1,28 @@
 import { IsIn, IsOptional, IsString, Matches, MinLength } from "class-validator";
 
+export type SessionChannel = "ussd" | "agent" | "whatsapp" | "voice";
+
+export const SESSION_CHANNELS: SessionChannel[] = [
+  "ussd",
+  "agent",
+  "whatsapp",
+  "voice",
+];
+
+export function normalizeSessionChannel(
+  channel?: string | null,
+): SessionChannel {
+  if (
+    channel === "agent" ||
+    channel === "whatsapp" ||
+    channel === "voice" ||
+    channel === "ussd"
+  ) {
+    return channel;
+  }
+  return "ussd";
+}
+
 export class ChannelSessionDto {
   @IsString()
   @MinLength(2)
@@ -24,8 +47,8 @@ export class ChannelSessionDto {
   locale?: "fr" | "ee" | "en";
 
   @IsOptional()
-  @IsIn(["ussd", "agent"])
-  channel?: "ussd" | "agent";
+  @IsIn(SESSION_CHANNELS)
+  channel?: SessionChannel;
 
   /** Display name of the community agent (stored on the case payload) */
   @IsOptional()

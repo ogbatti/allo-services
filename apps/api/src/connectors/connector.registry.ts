@@ -5,19 +5,33 @@ import {
   type PaymentConnector,
 } from "./payment/payment-connector";
 import { SMS_CONNECTORS, type SmsConnector } from "./sms/sms-connector";
+import {
+  VOICE_CONNECTORS,
+  type VoiceConnector,
+} from "./voice/voice-connector";
+import {
+  WHATSAPP_CONNECTORS,
+  type WhatsappConnector,
+} from "./whatsapp/whatsapp-connector";
 
 @Injectable()
 export class ConnectorRegistry {
   private readonly paymentById: Map<string, PaymentConnector>;
   private readonly smsById: Map<string, SmsConnector>;
+  private readonly whatsappById: Map<string, WhatsappConnector>;
+  private readonly voiceById: Map<string, VoiceConnector>;
 
   constructor(
     @Inject(PAYMENT_CONNECTORS) paymentConnectors: PaymentConnector[],
     @Inject(SMS_CONNECTORS) smsConnectors: SmsConnector[],
+    @Inject(WHATSAPP_CONNECTORS) whatsappConnectors: WhatsappConnector[],
+    @Inject(VOICE_CONNECTORS) voiceConnectors: VoiceConnector[],
     private readonly tenants: TenantsService,
   ) {
     this.paymentById = new Map(paymentConnectors.map((c) => [c.id, c]));
     this.smsById = new Map(smsConnectors.map((c) => [c.id, c]));
+    this.whatsappById = new Map(whatsappConnectors.map((c) => [c.id, c]));
+    this.voiceById = new Map(voiceConnectors.map((c) => [c.id, c]));
   }
 
   listPayment() {
@@ -34,12 +48,27 @@ export class ConnectorRegistry {
     }));
   }
 
+  listWhatsapp() {
+    return [...this.whatsappById.values()].map((c) => ({
+      id: c.id,
+      label: c.label,
+    }));
+  }
+
+  listVoice() {
+    return [...this.voiceById.values()].map((c) => ({
+      id: c.id,
+      label: c.label,
+    }));
+  }
+
   paymentForTenant(tenantId: string): PaymentConnector {
     const tenant = this.tenants.get(tenantId);
     const fromTenant = tenant.connectors?.payment;
     const fromEnv = process.env.PAYMENT_CONNECTOR;
     const id = fromTenant || fromEnv || "simulator";
-    const connector = this.paymentById.get(id) ?? this.paymentById.get("simulator");
+    const connector =
+      this.paymentById.get(id) ?? this.paymentById.get("simulator");
     if (!connector) {
       throw new Error("No payment connector registered");
     }
@@ -58,10 +87,38 @@ export class ConnectorRegistry {
     return connector;
   }
 
+  whatsappForTenant(tenantId: string): WhatsappConnector {
+    const tenant = this.tenants.get(tenantId);
+    const fromTenant = tenant.connectors?.whatsapp;
+    const fromEnv = process.env.WHATSAPP_CONNECTOR;
+    const id = fromTenant || fromEnv || "simulator";
+    const connector =
+      this.whatsappById.get(id) ?? this.whatsappById.get("simulator");
+    if (!connector) {
+      throw new Error("No WhatsApp connector registered");
+    }
+    return connector;
+  }
+
+  voiceForTenant(tenantId: string): VoiceConnector {
+    const tenant = this.tenants.get(tenantId);
+    const fromTenant = tenant.connectors?.voice;
+    const fromEnv = process.env.VOICE_CONNECTOR;
+    const id = fromTenant || fromEnv || "simulator";
+    const connector =
+      this.voiceById.get(id) ?? this.voiceById.get("simulator");
+    if (!connector) {
+      throw new Error("No voice connector registered");
+    }
+    return connector;
+  }
+
   /** Active selection summary for demo / ops. */
   resolveForTenant(tenantId: string) {
     const payment = this.paymentForTenant(tenantId);
     const sms = this.smsForTenant(tenantId);
+    const whatsapp = this.whatsappForTenant(tenantId);
+    const voice = this.voiceForTenant(tenantId);
     const tenant = this.tenants.get(tenantId);
     return {
       tenantId,
@@ -80,6 +137,24 @@ export class ConnectorRegistry {
         source: tenant.connectors?.sms
           ? "tenant"
           : process.env.SMS_CONNECTOR
+            ? "env"
+            : "default",
+      },
+      whatsapp: {
+        id: whatsapp.id,
+        label: whatsapp.label,
+        source: tenant.connectors?.whatsapp
+          ? "tenant"
+          : process.env.WHATSAPP_CONNECTOR
+            ? "env"
+            : "default",
+      },
+      voice: {
+        id: voice.id,
+        label: voice.label,
+        source: tenant.connectors?.voice
+          ? "tenant"
+          : process.env.VOICE_CONNECTOR
             ? "env"
             : "default",
       },

@@ -17,17 +17,16 @@ Priorité : **prouver l’adoption par configuration** et préparer un partenair
 - [x] Pack pays documenté (checklist + templates + `scaffold-tenant` / `smoke-tenant`)
 - [x] Rôles back-office (`instructor` / `supervisor` / `tenant_admin`)
 - [x] Journal d'audit exportable (filtres + JSON / CSV)
+- [x] Canaux WhatsApp / voix (stubs inbound + connecteurs sortants)
 
 ## P1 — Prochaine vague (partenaires)
 
-1. **Connecteur réel pilote** — un SMS ou MM derrière l’interface existante (avec un partenaire).  
-2. **WhatsApp / voix** (stubs puis connecteurs pilotes)
+1. **Connecteur réel pilote** — un SMS, MM, WhatsApp ou voix derrière l’interface existante (avec un partenaire).  
 
 ## P2 — Renforcement
 
-- WhatsApp / voix (stubs puis connecteurs pilotes)  
-- Niveaux de rôle back-office (instructeur / superviseur / admin tenant)  
 - Tests e2e automatisés sur les parcours de référence
+- Niveaux de rôle back-office (instructeur / superviseur / admin tenant)
 
 ## P3 — Écosystème
 

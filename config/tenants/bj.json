@@ -19,6 +19,8 @@
     "channels-sms",
     "channels-web",
     "channels-agent",
+    "channels-whatsapp",
+    "channels-voice",
     "payments",
     "notifications",
     "partner-backoffice",
@@ -27,6 +29,8 @@
   ],
   "connectors": {
     "payment": "stub-momo",
-    "sms": "stub-sms"
+    "sms": "stub-sms",
+    "whatsapp": "stub-whatsapp",
+    "voice": "stub-voice"
   }
 }

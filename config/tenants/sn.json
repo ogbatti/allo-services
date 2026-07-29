@@ -19,6 +19,8 @@
     "channels-sms",
     "channels-web",
     "channels-agent",
+    "channels-whatsapp",
+    "channels-voice",
     "payments",
     "notifications",
     "partner-backoffice",
@@ -26,7 +28,9 @@
   ],
   "connectors": {
     "payment": "simulator",
-    "sms": "simulator"
+    "sms": "simulator",
+    "whatsapp": "simulator",
+    "voice": "simulator"
   }
 }
 

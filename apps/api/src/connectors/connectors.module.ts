@@ -8,6 +8,12 @@ import { StubMomoPaymentConnector } from "./payment/stub-momo.payment-connector"
 import { SMS_CONNECTORS } from "./sms/sms-connector";
 import { SimulatorSmsConnector } from "./sms/simulator.sms-connector";
 import { StubSmsConnector } from "./sms/stub-sms.sms-connector";
+import { VOICE_CONNECTORS } from "./voice/voice-connector";
+import { SimulatorVoiceConnector } from "./voice/simulator.voice-connector";
+import { StubVoiceConnector } from "./voice/stub-voice.voice-connector";
+import { WHATSAPP_CONNECTORS } from "./whatsapp/whatsapp-connector";
+import { SimulatorWhatsappConnector } from "./whatsapp/simulator.whatsapp-connector";
+import { StubWhatsappConnector } from "./whatsapp/stub-whatsapp.whatsapp-connector";
 
 @Global()
 @Module({
@@ -18,6 +24,10 @@ import { StubSmsConnector } from "./sms/stub-sms.sms-connector";
     StubMomoPaymentConnector,
     SimulatorSmsConnector,
     StubSmsConnector,
+    SimulatorWhatsappConnector,
+    StubWhatsappConnector,
+    SimulatorVoiceConnector,
+    StubVoiceConnector,
     {
       provide: PAYMENT_CONNECTORS,
       useFactory: (
@@ -33,6 +43,22 @@ import { StubSmsConnector } from "./sms/stub-sms.sms-connector";
         stub,
       ],
       inject: [SimulatorSmsConnector, StubSmsConnector],
+    },
+    {
+      provide: WHATSAPP_CONNECTORS,
+      useFactory: (
+        sim: SimulatorWhatsappConnector,
+        stub: StubWhatsappConnector,
+      ) => [sim, stub],
+      inject: [SimulatorWhatsappConnector, StubWhatsappConnector],
+    },
+    {
+      provide: VOICE_CONNECTORS,
+      useFactory: (sim: SimulatorVoiceConnector, stub: StubVoiceConnector) => [
+        sim,
+        stub,
+      ],
+      inject: [SimulatorVoiceConnector, StubVoiceConnector],
     },
     ConnectorRegistry,
   ],

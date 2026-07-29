@@ -59,11 +59,12 @@ flowchart LR
 | `case-management` | Oui | Dossiers, transitions, suivi |
 | `partner-backoffice` | Oui | Instruction + JWT instructeur |
 | `channels-ussd` / `channels-web` / `channels-sms` | Oui | Simulateurs |
-| `payments` / `notifications` | Oui | Connecteurs `simulator` |
+| `channels-agent` / `channels-whatsapp` / `channels-voice` | Oui | Stubs inbound (mêmes parcours) |
+| `payments` / `notifications` | Oui | Connecteurs `simulator` / stubs |
 | `service-pack-civil-status` | Oui | Acte de naissance |
 | `service-pack-appointments` | Oui | Prise de RDV |
 | `service-pack-bill-payment` | Oui | Paiement facture (TG) |
-| voice / WhatsApp / agents / NLU | Non | Phases suivantes |
+| NLU | Non | Phases suivantes |
 
 Le menu USSD d’un tenant = **parcours dont le `service-pack-*` est dans `modules`**.
 
@@ -92,11 +93,13 @@ Interfaces dans `apps/api/src/connectors/` :
 
 | Id | Canal | Rôle |
 |----|--------|------|
-| `simulator` | paiement + SMS | Démo locale / TG par défaut |
+| `simulator` | paiement / SMS / WhatsApp / voix | Démo locale / TG par défaut |
 | `stub-momo` | paiement | Faux agrégateur Mobile Money |
 | `stub-sms` | SMS | Fausse passerelle SMS |
+| `stub-whatsapp` | WhatsApp | Faux BSP (Meta Cloud API plus tard) |
+| `stub-voice` | voix | Faux IVR / téléphonie |
 
-Sélection : `config/tenants/*.json` → `connectors.payment` / `connectors.sms` (prioritaire), sinon variables d’environnement `PAYMENT_CONNECTOR` / `SMS_CONNECTOR`, sinon `simulator`.
+Sélection : `config/tenants/*.json` → `connectors.payment` / `sms` / `whatsapp` / `voice` (prioritaire), sinon variables d’environnement `PAYMENT_CONNECTOR` / `SMS_CONNECTOR` / `WHATSAPP_CONNECTOR` / `VOICE_CONNECTOR`, sinon `simulator`.
 
 Catalogue runtime : `GET /api/v1/connectors` · par tenant : `GET /api/v1/connectors/:tenantId`.
 

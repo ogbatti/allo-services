@@ -255,6 +255,8 @@ export type ConnectorSelection = {
   tenantId: string;
   payment: { id: string; label: string; source: string };
   sms: { id: string; label: string; source: string };
+  whatsapp?: { id: string; label: string; source: string };
+  voice?: { id: string; label: string; source: string };
 };
 
 export function getTenantConnectors(tenantId: string) {
@@ -274,6 +276,32 @@ export function agentStep(body: {
   agentName?: string;
 }) {
   return request<ChannelResponse>("/channels/agent", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function whatsappStep(body: {
+  tenantId: string;
+  phoneNumber: string;
+  sessionId?: string;
+  input?: string;
+  locale?: string;
+}) {
+  return request<ChannelResponse>("/channels/whatsapp", {
+    method: "POST",
+    body: JSON.stringify(body),
+  });
+}
+
+export function voiceStep(body: {
+  tenantId: string;
+  phoneNumber: string;
+  sessionId?: string;
+  input?: string;
+  locale?: string;
+}) {
+  return request<ChannelResponse>("/channels/voice", {
     method: "POST",
     body: JSON.stringify(body),
   });
